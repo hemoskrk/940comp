@@ -1,0 +1,48 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "com.phonegap.plugins.PushPlugin": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.camera": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.device": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.dialogs": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.file": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.file-transfer": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.geolocation": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.inappbrowser": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.media": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.network-information": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.splashscreen": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        },
+        "org.apache.cordova.statusbar": {
+            "PACKAGE_NAME": "air.sa.gov.jeddah.jmmobile"
+        }
+    },
+    "dependent_plugins": {}
+}

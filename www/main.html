@@ -1,0 +1,3107 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+    <title>Jeddah 940 Mobile</title>
+    <!--JavaScript Files-->
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script type="text/javascript" src="PushNotification.js"></script>
+    <script src="js/language.js" type="text/javascript"></script>
+    <script src="js/jquery-1.10.2.js" type="text/javascript"></script>
+    <script src="js/jquery.mobile-1.4.0.js" type="text/javascript"></script>
+    <script src="js/jquery.soap.js" type="text/javascript"></script>
+    <script src="js/jquery.validate.js" type="text/javascript"></script>
+    <script src="js/json2.js" type="text/javascript"></script>
+    <script src="js/jstorage.js" type="text/javascript"></script>
+    <script src="js/UTMConvertor.js"></script>
+    <script type="text/javascript" src="http://maps1.jeddah.gov.sa/arcgis_js_api/library/3.8/3.8/init.js"></script>
+    <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDSHBmGx2k-R7V7N0pUrNFXhOvssJz-xvs&sensor=true&v=3.exp"></script>
+    <!--User Rating JS Files-->
+    <script src="js/labs.js"></script>
+    <script src="js/jquery.raty.js"></script>
+    <!--Css Files-->
+    <!-- Css Files For User Rating -->
+    <link rel="stylesheet" href="css/jquery.raty.css">
+    <link type="text/css" href="css/jquery.mobile-1.4.0.css" rel="stylesheet" />
+    <link type="text/css" rel="stylesheet" href="http://maps1.jeddah.gov.sa/arcgis_js_api/library/3.8/3.8/js/esri/css/esri.css" />
+    <link type="text/css" href="http://fonts.googleapis.com/earlyaccess/droidarabickufi.css"
+        rel="stylesheet" />
+    <!--Caution: Dont change the "style.css" file name, it is used in the code-->
+    <!--Add more css files (if needed) after the "style.css" file-->
+    <link type="text/css" href="css/style.css" id="style" rel="stylesheet" />
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript">
+        /* for User Ratings
+        default path for the user rating images*/
+        $.fn.raty.defaults.path = 'img/user_rating_images';
+        //---------------------------
+
+        $.mobile.transitionFallbacks.slideout = "none";
+        $.mobile.defaultPageTransition = "none";
+
+        var assignComplaintID, assignInspectorID, assignComplaintClass, map, graphic, pictureSource, destinationType;
+        var extInspPicDiv = 0; //remember to reset after submit, used in addInspectPhotosToDiv()
+        var pushNotification;
+        var maps;
+        var marker;
+        var platform = "";
+        var googleMap = true;
+        var mapClick;
+        var _userRatingValue;
+		
+		// to detect the device information
+		var DevicePlatform = "";
+		var DeviceVersion = "";
+		var DeviceModel = "";
+	
+        /*var nidErrMsg = "الرجاء التحقق من رقم الهوية";
+        var mobErrMsg = "الرجاء أدخل رقم الجوال صحيح";
+        var emailErrMsg = "الرجاء أدخل البريد الإلكتروني صحيح";*/
+
+        //document.addEventListener('deviceready', onDeviceReady, true); //comment this if you want to run this on PC and not send GCMregid - inspector with GCM
+
+        function onDeviceReady() {
+
+            /*if (window.device.platform === 'iOS' && parseFloat(window.device.version) === 7.0){
+            StatusBar.overlaysWebView(false);
+            document.body.style.marginTop = "20px";
+            Ext.Viewport.setHeight(Ext.Viewport.getWindowHeight() - 20);
+            }*/
+
+
+            /*
+            if (navigator.userAgent.match(/(iPad.*|iPhone.*|iPod.*);.*CPU.*OS 7_\d/i)) {
+            $("body").addClass("ios7");
+            Ext.Viewport.setHeight(Ext.Viewport.getWindowHeight() - 20);
+            }
+            */
+            /*
+            var deviceVersion = device.version;
+            var devicePlatform = device.platform;
+            var deviceVersion_str = String(deviceVersion);
+            if ((deviceVersion_str == '7.1.2') && (devicePlatform == 'iOS')){
+            $(".ui-page").css("margin-top","20px !important");
+            }
+            */
+
+
+            /*if (parseFloat(window.device.version) === 7.0) {
+            document.body.style.marginTop = "20px";
+            }
+            */
+
+
+		
+		
+            // exit event of the application: added by AAziz	
+            document.addEventListener("backbutton", function (e) {
+                if ($.mobile.activePage.is('#page')) {
+                    e.preventDefault();
+                    navigator.app.exitApp();
+                }
+                else {
+                    navigator.app.backHistory()
+                }
+            }, false);
+            //**********************************************
+
+            try {
+                platform = device.platform;
+                pushNotification = window.plugins.pushNotification;
+                if (device.platform == 'android' || device.platform == 'Android') {
+                    //$("#app-status-ul").append('<li>registering android</li>');
+                    //showNotificationBar("registering android");
+                    pushNotification.register(successHandler, errorHandler, { "senderID": "82588719", "ecb": "onNotificationGCM" });
+                    //required!
+                    //} else if (device.platform == 'iOS' || device.platform == 'IOS' && device.version == '7.1.2') {
+                } else if (device.platform == 'iOS' && device.version == '7.1.2') {
+                    //$("#app-status-ul").append('<li>registering iOS</li>');
+                    //showNotificationBar("registering iOS");
+
+                    //Adding 'margin-top: 20px' to solve the status bar issue facing only in iOS 7.x.x
+                    var sheet_req = '';
+                    for (var i = 0; i < document.styleSheets.length; i++) {
+                        sheet_req = document.styleSheets[i].href;
+                        if (sheet_req != null) {
+                            if (sheet_req.indexOf("css/style.css") != -1) {
+                                document.styleSheets[i].addRule('.ui-page', 'margin-top: 20px !important');
+                            }
+                        }
+
+                    }
+
+                    pushNotification.register(tokenHandler, errorHandler, { "badge": "true", "sound": "true", "alert": "true", "ecb": "onNotificationAPN" }); // required!
+                } else {
+                    //$("#app-status-ul").append('<li>registering iOS</li>');
+                    //showNotificationBar("registering iOS");
+                    pushNotification.register(tokenHandler, errorHandler, { "badge": "true", "sound": "true", "alert": "true", "ecb": "onNotificationAPN" }); // required!
+                }
+            }
+            catch (err) {
+                txt = "There was an error on this page.\n\n";
+                txt += "Error description: " + err.message + "\n\n";
+                alert(txt);
+            }
+        }
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+
+
+
+
+        function addRule(stylesheetId, selector, rule) {
+            var stylesheet = document.getElementById(stylesheetId);
+            if (stylesheet) {
+                stylesheet = stylesheet.sheet;
+                if (stylesheet.addRule) {
+                    stylesheet.addRule(selector, rule);
+                } else if (stylesheet.insertRule) {
+                    stylesheet.insertRule(selector + ' { ' + rule + ' }', stylesheet.cssRules.length);
+                }
+            }
+        }
+
+        function tokenHandler(result) {
+            //$("#app-status-ul").append('<li>token: ' + result + '</li>');
+            // Your iOS push server needs to know the token before it can push to this device
+            // here is where you might want to send it the token for later use.
+            //showNotificationBar("token: " + result);
+        }
+
+        function successHandler(result) {
+            //$("#app-status-ul").append('<li>success:' + result + '</li>');
+            //showNotificationBar("success: " + result);
+        }
+
+        function errorHandler(error) {
+            //$("#app-status-ul").append('<li>error:' + error + '</li>');
+            showNotificationBar("error: " + result);
+        }
+
+        function onNotificationGCM(e) {
+            //$("#app-status-ul").append('<li>EVENT -> RECEIVED:' + e.event + '</li>');
+            //showNotificationBar("EVENT -> RECEIVED:" + e.event);
+            switch (e.event) {
+                case 'registered':
+                    if (e.regid.length > 0) {
+                        //$("#app-status-ul").append('<li>REGISTERED -> REGID:' + e.regid + "</li>");
+                        // Your GCM push server needs to know the regID before it can push to this device
+                        // here is where you might want to send it the regID for later use.
+                        //showNotificationBar(e.regid);
+                        $.jStorage.set("RegId", e.regid);
+                        showNotificationBar("REGISTERED");
+                    }
+                    break;
+
+                case 'message':
+                    // if this flag is set, this notification happened while we were in the foreground.
+                    // you might want to play a sound to get the user's attention, throw up a dialog, etc.
+                    /*if (e.foreground) {
+                    //$("#app-status-ul").append('<li>--INLINE NOTIFICATION--' + '</li>');
+                    showNotificationBar("--INLINE NOTIFICATION--");
+                    // if the notification contains a soundname, play it.
+                    var my_media = new Media("/android_asset/www/" + e.soundname);
+                    my_media.play();
+                    }
+                    else {   // otherwise we were launched because the user touched a notification in the notification tray.
+                    if (e.coldstart)
+                    //$("#app-status-ul").append('<li>--COLDSTART NOTIFICATION--' + '</li>');
+                    showNotificationBar("--COLDSTART NOTIFICATION--");
+                    else
+                    //$("#app-status-ul").append('<li>--BACKGROUND NOTIFICATION--' + '</li>');
+                    showNotificationBar("--BACKGROUND NOTIFICATION--");
+                    }
+
+                    //$("#app-status-ul").append('<li>MESSAGE -> MSG: ' + e.payload.message + '</li>');
+                    //$("#app-status-ul").append('<li>MESSAGE -> MSGCNT: ' + e.payload.msgcnt + '</li>');*/
+                    showNotificationBar(e.payload.message);
+                    var my_media = new Media("/android_asset/www/" + e.soundname);
+                    my_media.play();
+                    break;
+
+                case 'error':
+                    //$("#app-status-ul").append('<li>ERROR -> MSG:' + e.msg + '</li>');
+                    showNotificationBar("ERROR -> MSG:" + e.msg);
+                    break;
+
+                default:
+                    //$("#app-status-ul").append('<li>EVENT -> Unknown, an event was received and we do not know what it is</li>');
+                    showNotificationBar("EVENT -> Unknown, an event was received and we do not know what it is");
+                    break;
+            }
+        }
+
+        function showNotificationBar(message, duration, bgColor, txtColor, height) {
+            /*set default values*/
+
+            duration = typeof duration !== 'undefined' ? duration : 3000;
+            bgColor = typeof bgColor !== 'undefined' ? bgColor : "#FFF";
+            txtColor = typeof txtColor !== 'undefined' ? txtColor : "#555";
+            height = typeof height !== 'undefined' ? height : 40;
+            /*create the notification bar div if it doesn't exist*/
+            if ($('#notification-bar').size() == 0) {
+                var HTMLmessage = "<div class='notification-message' style='text-align:center; line-height: " + height + "px;'> " + message + " </div>";
+                $('body').prepend("<div id='notification-bar' style='display:none; width:100%; height:" + height + "px; background-color: " + bgColor + "; position: fixed; z-index: 100; color: " + txtColor + ";'>" + HTMLmessage + "</div>");
+            }
+            else {
+                var HTMLmessage = "<div class='notification-message' style='text-align:center; line-height: " + height + "px;'> " + message + " </div>";
+                $('#notification-bar').html(HTMLmessage);
+            }
+            $('#notification-bar').slideUp();
+            /*animate the bar*/
+            $('#notification-bar').slideDown(function () {
+                setTimeout(function () {
+                    $('#notification-bar').slideUp(function () { });
+                }, duration);
+            });
+        }
+
+        $(function () {
+
+			
+
+            $.mobile.loading("show");
+
+            if ($.jStorage.get("language") != null) {
+                default_language = $.jStorage.get("language");
+            }
+
+            //isAuthorizedDevices(); //uncomment this if you want to run this on pc and check for inspector but GCM disabled
+            switch_language(); //uncomment this if you want to run this in Guest mode on pc - guest
+
+            // comment this part for guest
+            /*var regGCMDevice = setInterval(function(){
+            if($.jStorage.get("RegId"))
+            {
+            $("#deviceIdTxt").val(device.uuid);
+            var RegId = $.jStorage.get("RegId");
+            $("#gcmIdTxt").val(RegId);
+            if ($.jStorage.get("InspectorId"))
+            {
+            var InspectorId = $.jStorage.get("InspectorId");
+            if (checkConn()){
+            RegInspectorDevice(InspectorId,RegId);
+            }
+            else
+            {
+            clearInterval(regGCMDevice);
+            }
+            }
+            else
+            {
+            isAuthorizedDevices();
+            }
+            }		
+            }, 2500);*/
+            // comment the above part for guest
+
+            try {
+                setTimeout(function () {
+                    navigator.splashscreen.hide();
+                    //isAuthorizedDevices(); //comment for guest
+                }, 3000);
+            }
+            catch (error) {
+                alertNative(error);
+            }
+
+            function isAuthorizedDevices() {
+                try {
+                    GetJSONP("getEmplyeeByDeviceID", {
+                        deviceID: device.uuid  //"9345f12bcee315d6" device.uuid "610ddc1bd1ba1de0"
+                    }, loadAuthorizedDevices, null, null, null);
+                } catch (error) {
+                    console.log("Error at isAuthorizedDevices:" + error);
+                    switch_language();
+                }
+            }
+
+            function loadAuthorizedDevices(data) {
+                try {
+                    var pJSON = StringifyAndParse(data);
+                    if (pJSON != "") {
+                        //$("#mapBtn").attr("href", "#inspectionPage");
+                        //$("#switchImg").attr("src", "img/icons/worker-128.png");
+                        $.jStorage.set("UserName", pJSON[0].Name);
+                        $.jStorage.set("Mobile", pJSON[0].MobileNo);
+                        $.jStorage.set("NID", pJSON[0].NatID);
+                        $.jStorage.set("Email", pJSON[0].Email);
+                        $.jStorage.set("Role", pJSON[0].Role);
+                        $.jStorage.set("InspectorId", pJSON[0].id);
+                        $("#userSaveBtn").attr("disabled", "disabled");
+                        $("#nameTI").attr("disabled", "disabled");
+                        $("#nidTI").attr("disabled", "disabled");
+                        $("#mobTI").attr("disabled", "disabled");
+                        $("#emailTI").attr("disabled", "disabled");
+                    }
+                } catch (error) {
+                    //console.log("Error at loadAuthorizedDevices:" + error);
+                    //console.log(device.uuid);
+                }
+                switch_language();
+            }
+
+            function RegInspectorDevice(inspectorRegId, deviceRegId) {
+                GetJSONP("RegInspectorDevice", { InspectorID: inspectorRegId, regID: deviceRegId }, "onSuccess", null, null, null);
+            }
+
+            function switch_language() {
+                if (default_language == "arabic") {
+                    load_language("english");
+                    $("#languageImg").attr("src", "img/icons/arabic-128.png");
+                    $.jStorage.set("language", "arabic");
+                    //$("#feedbackPage").find("#feedbackBasicForm option").eq(0).text("Arabic Text");
+                    //$("#feedbackPage").find("#feedbackBasicForm option").eq(0).text(eval('lblSelectMessageType.' + default_language));
+
+                } else {
+                    load_language("arabic");
+                    $("#languageImg").attr("src", "img/icons/english-128.png");
+                    $.jStorage.set("language", "english");
+                    //$("#feedbackPage").find("#feedbackBasicForm option").eq(0).text("English Text");
+                    //$("#feedbackPage").find("#feedbackBasicForm option").eq(0).text(eval('lblSelectMessageType.' + default_language));
+                }
+                get_user_info();
+            }
+
+            function get_user_info() {
+                var name = $.jStorage.get("UserName");
+                if (name != null) {
+                    $("#nameTI").val(name);
+                    var nid = $.jStorage.get("NID");
+                    $("#nidTI").val(nid);
+                    var mob = $.jStorage.get("Mobile");
+                    $("#mobTI").val(mob);
+                    var email = $.jStorage.get("Email");
+                    $("#emailTI").val(email);
+                } else {
+                    name = eval('guestLbl.' + default_language);
+                }
+                $("#welcome").text(eval('welcome.' + default_language) + " " + name);
+                $.mobile.loading("hide");
+            }
+
+            function load_language(lang) {
+                default_language = lang;
+                $("#setting").text(eval('setLbl.' + default_language));
+                $("#userProfile").text(eval('userLbl.' + default_language));
+                $("#newLbl").text(eval('newLbl.' + default_language));
+                $("#histLbl").text(eval('histLbl.' + default_language));
+                $("#setLbl").text(eval('setLbl.' + default_language));
+                $("#userLbl").text(eval('userLbl.' + default_language));
+                $("#langLbl").text(eval('langLbl.' + default_language));
+                $("#helpLbl").text(eval('helpLbl.' + default_language));
+                $("#helpPageLbl").text(eval('helpLbl.' + default_language));
+                $("#backLbl").text(eval('backLbl.' + default_language));
+                $("#backLbl2").text(eval('backLbl.' + default_language));
+                $("#backLbl3").text(eval('backLbl.' + default_language));
+                $("#helpLbl2").text(eval('helpLbl.' + default_language));
+                $("#nameLbl").text(eval('nameLbl.' + default_language));
+                $("#nidLbl").text(eval('nidLbl.' + default_language));
+                $("#mobLbl").text(eval('mobLbl.' + default_language));
+                $("#emailLbl").text(eval('emailLbl.' + default_language));
+                $("#userSaveBtn").val(eval('saveLbl.' + default_language));
+                $("#slctCatLbl").text(eval('slctCatLbl.' + default_language));
+                $("#slctSubCatLbl").text(eval('slctSubCatLbl.' + default_language));
+                $("#HistTitle").text(eval('histLbl.' + default_language));
+                $("#inspectLbl").text(eval('inspectLbl.' + default_language));
+                $("#inspectInboxLbl").text(eval('listLbl.' + default_language));
+                $("#searchLbl").text(eval('searchLbl.' + default_language));
+                $("#searchPageLbl").text(eval('searchLbl.' + default_language));
+                $("#searchCompBtn").text(eval('searchLbl.' + default_language));
+                $("#listLbl").text(eval('listLbl.' + default_language));
+                $("#mapLbl").text(eval('mapLbl.' + default_language));
+                $("#mapPageTitle").text(eval('slctMapLocLbl.' + default_language));
+                $("#compComplainerNameLbl").text(eval('nameLbl.' + default_language));
+                $("#compComplainerContactLbl").text(eval('mobLbl.' + default_language));
+                $("#compInfoLbl").text(eval('compInfoLbl.' + default_language));
+                $("#compStatusLbl").text(eval('compStatusLbl.' + default_language));
+                $("#compNameLbl").text(eval('compNameLbl.' + default_language));
+                $("#compDescLbl").text(eval('compDescLbl.' + default_language));
+                $("#compLocDescLbl").text(eval('compLocDescLbl.' + default_language));
+                $("#compRespGroupLbl").text(eval('compRespGroupLbl.' + default_language));
+                $("#compCloseDateLbl").text(eval('compCloseDateLbl.' + default_language));
+                $("#compCreateDateLbl").text(eval('compCreateDateLbl.' + default_language));
+                $("#compDeadlineLbl").text(eval('compDeadlineLbl.' + default_language));
+                $("#compCloseCodeLbl").text(eval('compCloseCodeLbl.' + default_language));
+                $("#supAssignBtn").val(eval('supAssignLbl.' + default_language));
+                $("#slctInspectorLbl").text(eval('slctInspectorLbl.' + default_language));
+                $("#slctPriorityLbl").text(eval('slctPriorityLbl.' + default_language));
+                $("#assignComplaintIDLbl").text(eval('complaintNoLbl.' + default_language));
+                $("#assignInspectorIDLbl").text(eval('inspectorNameLbl.' + default_language));
+                $("#assignComplaintClassLbl").text(eval('priorityNameLbl.' + default_language));
+                $("#confSupAssignBtn").val(eval('confirmLbl.' + default_language));
+                $("#assignCompLbl").text(eval('supAssignLbl.' + default_language));
+                $("#genComplaintLbl").text(eval('compInfoLbl.' + default_language));
+                $("#slctCompParNameLbl").text(eval('compParNameLbl.' + default_language));
+                $("#slctCompNameLbl").text(eval('compNameLbl.' + default_language));
+                $("#slctCompLocDescLbl").text(eval('compLocDescLbl.' + default_language));
+                $("#slctCompDescLbl").text(eval('compDescLbl.' + default_language));
+                $("#submitComplaint").val(eval('sendLbl.' + default_language));
+                $("#slctUploadImageLbl").text(eval('uploadPicLbl.' + default_language));
+                $(".ui-icon-camera").html(eval('cameraLbl.' + default_language));
+                $("#picLibBtn").html(eval('picLibLbl.' + default_language));
+                $("#inboxAssignLbl").html(eval('inboxAssignLbl.' + default_language));
+                $("#vistedAssignLbl").html(eval('visitedAssignLbl.' + default_language));
+                $("#newAssignLbl").html(eval('newAssignLbl.' + default_language));
+                $("#").html(eval('newAssignLbl.' + default_language));
+                $("#inspectorActionLbl").html(eval('inspectorActionLbl.' + default_language));
+                $("#supervisorActionLbl").html(eval('supervisorActionLbl.' + default_language));
+                $("#changeDeptList1").html(eval('changeDeptLbl.' + default_language));
+                $("#inspectorCommentLbl").html(eval('commentLbl.' + default_language));
+                $("#addInspectPhotosBtn").val(eval('addPhotosLbl.' + default_language));
+                $("#inspectorNameLbl").html(eval('inspectorNameLbl.' + default_language));
+                $("#visitTimeLbl").html(eval('visitTimeLbl.' + default_language));
+                $("#visitCommentLbl").html(eval('inspectorCommentsLbl.' + default_language));
+                $("#visitDepartmentListLbl").html(eval('deptChangeByInspectorLbl.' + default_language));
+                $("#inspectorSubmitBtn").val(eval('submitLbl.' + default_language));
+                $("#superSubmitBtn").val(eval('submitLbl.' + default_language));
+                //--------------------------------------
+                // for Feedbacks Page --Added by AAziz
+                $("#lblContactUsHeader").text(eval('lblContactUsHeader.' + default_language));
+                $("#lblBtnContactUs").text(eval('lblContactUsHeader.' + default_language));
+                $("#lblMessageType").text(eval('lblMessageType.' + default_language));
+
+                $("#lblSelectMessageType").text(eval('lblSelectMessageType.' + default_language));
+                $("#lblComplaintsOpt").text(eval('lblComplaintsOpt.' + default_language));
+                $("#lblInquiryOpt").text(eval('lblInquiryOpt.' + default_language));
+                $("#lblSuggestionOpt").text(eval('lblSuggestionOpt.' + default_language));
+                $("#lblRequestOpt").text(eval('lblRequestOpt.' + default_language));
+                $("#lblInvitationOpt").text(eval('lblInvitationOpt.' + default_language));
+                $("#lblComplimentOpt").text(eval('lblComplimentOpt.' + default_language));
+                $("#lblCitizenName").text(eval('lblCitizenName.' + default_language));
+                $("#lblNationalId").text(eval('lblNationalId.' + default_language));
+                $("#lblMobileNumber").text(eval('lblMobileNumber.' + default_language));
+                $("#lblEmail").text(eval('lblEmail.' + default_language));
+                $("#lblMessageTitle").text(eval('lblMessageTitle.' + default_language));
+                $("#lblMessageType").text(eval('lblMessageType.' + default_language));
+                $("#lblMessageContent").text(eval('lblMessageContent.' + default_language));
+
+                //$("#btnSendFeedback").val(eval('btnSendFeedback.' + default_language));
+                $("#btnSendFeedback").attr("value", eval('btnSendFeedback.' + default_language));
+                //--------------------------------------
+
+                // for User Rating Controls -- Added by AAziz
+                $("#lblUserRating").text(eval('lblUserRating.' + default_language));
+                $("#lnkUserRating").text(eval('lnkUserRating.' + default_language));
+
+                $("#btnSubmitUserRating").text(eval('btnSubmitUserRating.' + default_language));
+                $("#btnCancelUserRating").text(eval('btnCancelUserRating.' + default_language));
+
+				$("#lblDialogPopUserRatingHeader").html(eval('lblDialogPopUserRatingHeader.' + default_language));
+                //$("#lblDialogPopUserRatingHeader").text(eval('lblDialogPopUserRatingHeader.' + default_language));
+                //--------------------------------------
+
+                //$.mobile.loader.prototype.options.text = eval('loadingLbl.' + default_language);
+
+                if ($.jStorage.get("Role")) {
+                    $("#switchLbl").text(eval('inspectLbl.' + default_language));
+                } else {
+                    $("#switchLbl").text(eval('mapLbl.' + default_language));
+                }
+
+                $("#progress-bar-div").hide();
+                $("#uploadImage").hide();
+                $("#supAssignBtnDiv").hide();
+                $("#inspectVisitInputDiv").hide();
+                $("#visitInfoDiv").hide();
+                $("#compPersonDetail").hide();
+                $("#compMapMarker").hide();
+                $("#compImg").hide();
+                $("#visitImage1").hide();
+                $("#visitImage2").hide();
+                $("#visitImage3").hide();
+                $("#visitImage4").hide();
+                $("#arabicHelp").hide();
+                $("#englishHelp").hide();
+                var help = "#" + default_language + "Help";
+                $(help).show();
+            }
+
+            function GetJSONP(reqURL, reqData, successMethod, errorMethod, targetList, nextPage) {
+                //if (checkConn()) {
+                $.mobile.loading("show", {
+                    text: eval('loadingLbl.' + default_language),
+                    textVisible: true,
+                    theme: "a",
+                    html: ""
+                });
+
+                reqData = (reqURL == "AddNew940Complaint") ? JSON.stringify(reqData) : reqData;
+                console.log("Calling function:" + reqURL + " with following data:");
+                console.log(reqData);
+                var evalSuccessMethod = eval(successMethod);
+                errorMethod = (errorMethod == null) ? GetJSONPError : errorMethod;
+                debugger;
+                $.ajax({
+                    type: "POST", //GET or POST or PUT or DELETE verb
+                    url: "http://maps.jeddah.gov.sa/WCFService/JSonPerson.svc/" + reqURL, // Location of the service   the original url service is  url: "http://maps.jeddah.gov.sa/WCFService940/JSonPerson.svc/"
+                    //http://maps.jeddah.gov.sa/WCFService940/JSonPerson.svc/
+                    //http://localhost:6508/JSonPerson.svc/
+                    //http://localhost/JedEdpWcf/jedexpservice.svc/
+
+                    //url: "http://maps.jeddah.gov.sa/WCFService_email/JSonPerson.svc/" + reqURL, // Location of the service
+                    data: reqData, //Data sent to server
+                    contentType: "json", // content type sent to server
+                    dataType: "jsonp", //Expected data format from server
+                    processdata: false, //True or False
+                    timeout: 60000,
+                    success: function (data) {
+
+
+                        evalSuccessMethod(data, targetList, nextPage);
+                    },
+                    error: errorMethod
+                });
+                //}
+            }
+
+            function GetJSONPError(error) {
+                $.mobile.loading("hide");
+                //console.log("Error: function GetJSONP()");
+                alertNative(eval('connTimeOutLbl.' + default_language));
+            }
+
+            function StringifyAndParse(data) {
+                //console.log("Getting Result...");
+                //console.log(data);
+                var stringify = JSON.stringify(data);
+                //console.log("JSON.stringify succeed");
+                var pJSON = $.parseJSON(stringify);
+                console.log("parseJSON succeed");
+                console.log(pJSON);
+                return pJSON;
+            }
+
+            function getComplaintCategories() {
+                GetJSONP("getParentCats", "null", "loadCatAndSubList", null, "#slctCatList", "#slctCatPage");
+            }
+
+            function getComplaintSubCategories() {
+                var slctCat = ($(this).attr('id'));
+                $("#slctCompParNameId").val(slctCat);
+                $("#slctCompParNameTxt").val($(this).html());
+                GetJSONP("getSubCats", {
+                    parentID: slctCat
+                }, "loadCatAndSubList", null, "#slctSubCatList", "#slctSubCatPage");
+            }
+
+            function loadCatAndSubList(data, targetList, nextPage) {
+                try {
+                    $(targetList).html("");
+                    var pJSON = StringifyAndParse(data);
+                    if (pJSON != "") {
+                        for (var i in pJSON) {
+                            // added by AAziz ---- (Start)
+                            // changing the categories and sub-categories as per default language selected
+                            if (default_language == "arabic") {
+                                //console.log(pJSON[i].id + " - " + pJSON[i].Name);
+                                $("<li><a class='ui-btn ui-btn-icon-right ui-icon-carat-r' id='" + pJSON[i].id + "' name='" + pJSON[i].ParentId + "'>" + pJSON[i].Name + "</a></li>").appendTo(targetList);
+                            } else {
+                                //console.log(pJSON[i].id + " - " + pJSON[i].EName);
+                                $("<li><a class='ui-btn ui-btn-icon-right ui-icon-carat-r' id='" + pJSON[i].id + "' name='" + pJSON[i].ParentId + "'>" + pJSON[i].EName + "</a></li>").appendTo(targetList);
+                            }
+                            // added by AAziz ---- (End)   
+                        }
+                    } else {
+                        $("<li><a class='ui-btn'>" + eval('noInfo.' + default_language) + "</a></li>").appendTo(targetList);
+                    }
+                    //console.log("List Load Complete");
+                } catch (error) {
+                    //console.log("Error at loadCatAndSubList:" + error);
+                }
+                $.mobile.loading("hide");
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function getMapforLocation() {
+                $("#slctCompNameId").val($(this).attr('id'));
+                $("#slctCompNameTxt").val($(this).html());
+                //resizeMap();
+                $.mobile.navigate("#mapPage");
+            }
+
+            function generateComplaint() {
+                var slctLoc = ($(this).html());
+                $("#slctCompLocDescTxt").val(slctLoc);
+                if ($("#slctCompNameId").val() != "") {
+                    $.mobile.navigate("#genComplaintPage");
+                }
+            }
+
+            //---------------------------------------- Ahmed Code ------------------------------------------            		   		    
+
+            function executeIdentifyTask(evt) {
+                var PROJCS = new esri.SpatialReference('PROJCS["WGS_84_UTM_zone_37N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["false_easting",500000.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",39.0],PARAMETER["scale_factor",0.9996],PARAMETER["latitude_of_origin",0.0],UNIT["Meter",1.0]]');
+                debugger;
+                identifyTask = new esri.tasks.IdentifyTask("http://maps1.jeddah.gov.sa/arcgis/rest/services/JeddahBaseMap_New/MapServer");
+                identifyParams = new esri.tasks.IdentifyParameters();
+                identifyParams.tolerance = 50;
+                identifyParams.returnGeometry = false;
+                identifyParams.layerIds = [10, 8, 6, 7];
+                identifyParams.layerOption = esri.tasks.IdentifyParameters.LAYER_OPTION_ALL;
+                //identifyParams.width = map.width;
+                //identifyParams.height = map.height;
+
+                //var X = map.latLng.lat().toFixed(6);
+                //var Y = map.latLng.lng().toFixed(6);               
+
+
+                ToUTM(evt.latLng.lat(), evt.latLng.lng());
+                var x = Number(X);
+                var y = Number(Y);
+
+                // getting Zone
+                var zone_selected = Math.floor((evt.latLng.lng() + 180.0) / 6) + 1;
+                var points = new esri.geometry.Point(x, y, PROJCS);
+                var extent = new esri.geometry.Extent(x - 150, y - 150, x + 150, y + 150, PROJCS)
+                //----------------------------------                                
+
+                identifyParams.geometry = points;
+                identifyParams.mapExtent = extent;
+                var SUBMUN, DIST,subDIST, STRT = "";
+                //var deferred = identifyTask.execute(identifyParams, successResult,fail);
+
+                var deferred = identifyTask.execute(identifyParams);
+
+                deferred.addCallback(function (response) {
+                    console.log(response);
+                    if (response != "") {
+                        for (var i in response) {
+                            if (response[i].layerId == 10) {
+                                if (response[i].value != "undefined") {
+                                    SUBMUN = response[i].value;
+
+                                $("#slctSUBMUNId").val(response[i].feature.attributes['رقم البلدية الفرعية']);
+                                }
+                                else {
+                                    SUBMUN = "البلدية غير معرفه";
+                                    $("#slctSUBMUNId").val("0");
+
+                                }
+
+                            }
+                            if (response[i].layerId == 8) {
+                                if (response[i].value != "undefined") {
+
+                                    DIST = response[i].value;
+                                 
+                                $("#slctDISTId").val(response[i].feature.attributes['رقم الحي']);
+                                }
+                                else {
+                                    DIST = "الحي غير معرف";
+                                    $("#slctDISTId").val("0");
+
+                                }
+                            }
+                            
+                            if (response[i].layerId == 7) {
+                               
+                                subDIST= response[i].value;
+                                $("#slctsubDISTId").val(response[i].feature.attributes['رقم الحي الفرعي']);
+                              
+                                
+                            }
+
+
+                            if (DIST == null) { DIST = "الحي الرئيسي غير معرف"; $("#slctDISTId").val("0"); }
+                            if (subDIST == null) { subDIST = "الحي الفرعي غير معرف"; $("#slctsubDISTId").val("0"); }
+
+                          
+                            
+                            if (response[i].layerId == 6) {
+                                STRT = response[i].value;
+                                $("#slctSTRTName").val(STRT);
+                                $("#slctSTRTId").val(response[i].feature.attributes['رقم الشارع']);
+                                STRT = ($.trim(STRT) != "") ? " / " + STRT : "";
+                            }
+
+                        }
+
+                        if ($("#slctCompNameId").val() != "") {
+                            $("#mapLocLbl").html(eval('confLocLbl.' + default_language));
+                            $("#slctMapLocationList").html("<a class='ui-btn-icon-right ui-icon-carat-r'>" + SUBMUN + " / " + DIST+" / " + subDIST + STRT + "</a>");
+                        } else {
+                            $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+                            $("#slctMapLocationList").html(SUBMUN + " / " + DIST+" / " + subDIST + STRT);
+                        }
+
+                        if (marker != null)
+                            marker.setMap(null);
+
+
+                        marker = new google.maps.Marker({
+                            position: evt.latLng,
+                            animation: google.maps.Animation.DROP,
+                            map: maps
+                        });
+                        if (platform == 'iOS')
+                            $("#slctMapLocation").popup("open", {
+                                x: evt.pixel.x, //evt.latLng.lng().toFixed(10) ,
+                                y: evt.pixel.y + 65 // evt.latLng.lat().toFixed(10) 
+                            });
+                        else
+                            $("#slctMapLocation").popup("open", {
+                                x: evt.pixel.x, //evt.latLng.lng().toFixed(10) ,
+                                y: evt.pixel.y + 45 // evt.latLng.lat().toFixed(10) 
+                            });
+                    }
+                    else {
+                        $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+                        $("#slctMapLocationList").html(eval('outOfJedLbl.' + default_language));
+                    }
+                });
+
+
+                latlon = new Array(2);
+                //UTMXYToLatLon(evt.mapPoint.x, evt.mapPoint.y, 37, false, latlon);
+                $("#GPSLon").val(x);
+                $("#GPSLat").val(y);
+            }
+
+            /*function successResult(response) {
+            console.log(response);
+            var SUBMUN, DIST, STRT = "";
+            if (response != "") {
+            for (var i in response) {
+            if (response[i].layerId == 10) {
+            SUBMUN = response[i].value;
+            $("#slctSUBMUNId").val(response[i].feature.attributes['رقم البلدية الفرعية']);
+            }
+            if (response[i].layerId == 8) {
+            DIST = response[i].value;
+            $("#slctDISTId").val(response[i].feature.attributes['رقم الحي']);
+            }
+            if (response[i].layerId == 6) {
+            STRT = response[i].value;
+            $("#slctSTRTName").val(STRT);
+            $("#slctSTRTId").val(response[i].feature.attributes['رقم الشارع']);
+            STRT = ($.trim(STRT) != "") ? " / " + STRT : "";
+            }
+
+            }
+               
+            if ($("#slctCompNameId").val() != "") {
+            $("#mapLocLbl").html(eval('confLocLbl.' + default_language));
+            $("#slctMapLocationList").html("<a class='ui-btn ui-btn-icon-right ui-icon-carat-r'>" + SUBMUN + " / " + DIST + STRT + "</a>");
+            } else {
+            $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+            $("#slctMapLocationList").html(SUBMUN + " / " + DIST + STRT);
+            }
+            }
+            else {
+            $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+            $("#slctMapLocationList").html(eval('outOfJedLbl.' + default_language));
+            }
+            }
+
+            function fail(response) {
+
+            }*/
+            function openMapPage() {
+                try {
+                    if (maps == null) {
+                        var mapOption = {
+                            center: new google.maps.LatLng(21.5018418, 39.1675561),
+                            zoom: 14,
+                            mapTypeId: google.maps.MapTypeId.ROADMAP,
+                            zoomControl: false,
+                            streetViewControl: false,
+                            panControl: false
+                            //disableDefaultUI: true
+                            //mapTypeId: google.maps.MapTypeId.ROADMAP
+                        };
+                        googleMap = false;
+                        maps = new google.maps.Map(document.getElementById("map"), mapOption);
+                        navigator.geolocation.getCurrentPosition(function (position) {
+                            var geolocate = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+                            maps.setCenter(geolocate);
+                        });
+                        resizeMap();
+                    }
+                    else {
+                        //google.maps.event.removeListener(mapClick);
+                        google.maps.event.clearListeners(maps, mapClick);
+                        if (marker != null)
+                            marker.setMap(null);
+                        resizeMap();
+                    }
+
+                    $.mobile.navigate("#mapPage");
+                }
+                catch (e) {
+                    alertNative(e.name);
+                }
+
+            }
+
+            function getMapforLocation() {
+                $("#slctCompNameId").val($(this).attr('id'));
+                $("#slctCompNameTxt").val($(this).html());
+
+                //if (!!navigator.geolocation) {                    
+
+                esri.config.defaults.io.proxyUrl = "http://maps1.jeddah.gov.sa/proxy/proxy.ashx";
+                if (maps == null) {
+                    var mapOption = {
+                        center: new google.maps.LatLng(21.5018418, 39.1675561),
+                        zoom: 16,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP,
+                        zoomControl: false,
+                        streetViewControl: false,
+                        panControl: false
+                        //disableDefaultUI: true                        
+                    };
+                    maps = new google.maps.Map(document.getElementById("map"), mapOption);
+
+                    mapClick = google.maps.event.addListener(maps, 'click', executeIdentifyTask);
+                    googleMap = false;
+
+                    //var maps = new google.maps.Map(document.getElementById('map'), mapOptions);                    
+                    resizeMap();
+                }
+                else {
+                    google.maps.event.addListener(maps, 'click', executeIdentifyTask);
+                }
+
+                $.mobile.navigate("#mapPage");
+                resizeMap();
+            }
+
+            // ---------------------------------- End Ahmed Code ---------------------------------------------------------
+
+
+            function getComplaintHistory() {
+                var natid = $.jStorage.get("NID");
+                //console.log("National ID: " + natid);
+                if (natid != null) {
+                    GetJSONP("GetCompByNatID", {
+                        NatID: natid
+                    }, "loadComplaintHistory", null, "#compHistList", null);
+
+                } else {
+                    $("<li><a class='ui-btn'>" + eval('noUserInfo.' + default_language) + "</a></li>").appendTo("#compHistList");
+                }
+            }
+
+            function loadComplaintHistory(data, targetList, nextPage) {
+                $(targetList).html("");
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    for (var i in pJSON) {
+                        //console.log(pJSON[i]);
+                        $("<li><a class='ui-btn ui-btn-icon-right ui-icon-carat-r' id='" + pJSON[i] + "'>" + eval(pJSON[i]) + "</a></li>").appendTo(targetList);
+                    }
+                } else {
+                    $("<li><a class='ui-btn'>" + eval('noInfo.' + default_language) + "</a></li>").appendTo(targetList);
+                }
+                $.mobile.loading("hide");
+            }
+
+            function getInspectorsList() {
+                GetJSONP("GetAllInspctores", "null", "loadInspectorsList", null, "#slctInspectorList", "#slctInspectorPage");
+            }
+
+            function loadInspectorsList(data, targetList, nextPage) {
+                $(targetList).html("");
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    for (var i in pJSON) {
+                        //console.log(pJSON[i].id);
+                        $("<li><a class='ui-btn ui-btn-icon-right ui-icon-carat-r' id='" + pJSON[i].id + "'>" + pJSON[i].Name + "</a></li>").appendTo(targetList);
+                    }
+                } else {
+                    $("<li><a class='ui-btn'>" + eval('noInfo.' + default_language) + "</a></li>").appendTo(targetList);
+                }
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function GIBCN(data, targetList, nextPage) {
+                //console.log("imagedata:");
+                //console.log(data);
+                if (data != "No Image") {
+                    $("#compImg").attr("src", "data:image/jpeg;base64," + data)
+                    $("#compImg").show();
+                }
+
+                //Hiding Image DIV if there is no image in the data object -- Added by AAziz
+                else {
+                    $("#compImg").hide();
+                }
+            }
+
+            function getComplaintInfoByID(complaintId) {
+                GetJSONP("GetComDesByComID", { com: complaintId }, "loadComplaintInfoById", null, null, null);
+                GetJSONP("getImageByComplaintNO", { ComplaintNo: complaintId }, "GIBCN", null, null, null);
+                $("#assignComplaintIDTxt").val(complaintId);
+                assignComplaintID = complaintId;
+            }
+
+            function loadComplaintInfoById(data) {
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+
+                    if (pJSON[0].GPSLat != "") {
+                        $("#compMapImgDiv").show();
+                        //ToUTM(pJSON[0].GPSLat, pJSON[0].GPSLon);
+                        ////var mapImgURL = "http://maps1.jeddah.gov.sa/arcgis/rest/services/JeddahBaseMap_New/MapServer/export?bbox=" + Number(X) + "," + Number(Y) + "," + Number(X) + "," + Number(Y) + "&size=400%2C250&format=png&transparent=false&dpi=256&mapScale=10000&f=image";
+                        var mapImgURL = "http://maps.googleapis.com/maps/api/staticmap?center=" + pJSON[0].GPSLat + "," + pJSON[0].GPSLon + "&size=65x50&zoom=15&scale=2";
+                        $("#compMapImg").attr("src", mapImgURL);
+                    }
+
+                    if ($.jStorage.get("Role")) {
+                        $("#compPersonDetail").show();
+                        $("#compComplainerNameTxt").val($.trim(pJSON[0].complainerName));
+                        $("#compComplainerContactTxt").val($.trim(pJSON[0].complainerMob));
+                    }
+                    $("#compIdLbl").html(pJSON[0].complaintNo);
+                    $("#compStatusTxt").val(pJSON[0].incidentStatusName);
+                    $("#compCreateDateTxt").val(pJSON[0].createOnDate);
+                    $("#compCloseDateTxt").val(pJSON[0].closeDate);
+                    $("#compDeadlineTxt").val(pJSON[0].Deadline);
+                    $("#compNameTxt").val(pJSON[0].incidentSubCatName);
+                    $("#compDescTxt").val(pJSON[0].Description);
+
+                    var locDescTxt = $.trim(pJSON[0].MunicipalityName);
+                    //old :locDescTxt += pJSON[0].SubDistrictName == null ? " , " + $.trim(pJSON[0].DistrctName) : " , " + $.trim(pJSON[0].SubDistrictName);
+                    // Add by Essam to display SubDistrictName  in complaintInfoPage
+                    if (pJSON[0].SubDistrictName != null) {
+                        locDescTxt += ","+$.trim(pJSON[0].DistrctName) + " , " + $.trim(pJSON[0].SubDistrictName);
+                        locDescTxt += $.trim(pJSON[0].complainStreetName) == "" || null ? "" : " , " + $.trim(pJSON[0].complainStreetName);
+
+                    }
+
+                    else {
+                        //old:  the two next lines without if else
+                        locDescTxt += pJSON[0].SubDistrictName == null ? " , " + $.trim(pJSON[0].DistrctName) : " , " + $.trim(pJSON[0].SubDistrictName);
+                        locDescTxt += $.trim(pJSON[0].complainStreetName) == "" || null ? "" : " , " + $.trim(pJSON[0].complainStreetName);
+                    }
+                    $("#compLocDescTxt").val(locDescTxt);
+
+                    $("#compRespGroupTxt").val(pJSON[0].GroupName);
+                    $("#compCloseCodeTxt").val(pJSON[0].ClosingCode);
+
+                    // user rating to toggle visibility of the read-only rating
+                    var feedbackValue = pJSON[0].UserFeedbackValue;
+                    if (feedbackValue) {
+                        $("#historyUserRatingSection").show();
+                        $("#initialUserRatingSection").hide();
+                        toggleVisbilityOfUserRatings(feedbackValue);
+                    } else {
+                        $("#historyUserRatingSection").hide();
+                        $("#initialUserRatingSection").show();
+                    }
+
+                    setTimeout(function () {
+                        var comMapMarkerX = (compMapImg.width / 2) - 19;
+                        var comMapMarkerY = (compMapImg.height / 2) - 19;
+                        $("#compMapMarker").css({ "left": comMapMarkerX + "px", "top": comMapMarkerY + "px" });
+                        $("#compMapMarker").show();
+                    }, 2000);
+
+                    $.mobile.navigate("#complaintInfoPage");
+                } else {
+                    $("#srchErrorLbl").text(eval('srchErrorLbl.' + default_language));
+                    $.mobile.loading("hide");
+                }
+
+                if ($("#inspectVisitInputDiv").css("display") == "block") {
+
+                    $("#allDepartmentList option").filter(function () {
+                        return $(this).html() == pJSON[0].GroupName;
+                    }).prop('selected', true);
+                    $("#allDepartmentList").selectmenu("refresh");
+                }
+            }
+            function toggleVisbilityOfUserRatings(user_rating_value) {
+                if (user_rating_value == "1") {
+                    $("#one_star_Rating").show();
+                    $("#two_star_Rating").hide();
+                    $("#three_star_Rating").hide();
+                    $("#four_star_Rating").hide();
+                    $("#five_star_Rating").hide();
+                } else if (user_rating_value == "2") {
+                    $("#one_star_Rating").hide();
+                    $("#two_star_Rating").show();
+                    $("#three_star_Rating").hide();
+                    $("#four_star_Rating").hide();
+                    $("#five_star_Rating").hide();
+                } else if (user_rating_value == "3") {
+                    $("#one_star_Rating").hide();
+                    $("#two_star_Rating").hide();
+                    $("#three_star_Rating").show();
+                    $("#four_star_Rating").hide();
+                    $("#five_star_Rating").hide();
+                } else if (user_rating_value == "4") {
+                    $("#one_star_Rating").hide();
+                    $("#two_star_Rating").hide();
+                    $("#three_star_Rating").hide();
+                    $("#four_star_Rating").show();
+                    $("#five_star_Rating").hide();
+                } else if (user_rating_value == "5") {
+                    $("#one_star_Rating").hide();
+                    $("#two_star_Rating").hide();
+                    $("#three_star_Rating").hide();
+                    $("#four_star_Rating").hide();
+                    $("#five_star_Rating").show();
+                }
+            }
+            function slctInspector() {
+                assignInspectorID = $(this).attr("id");
+                $("#assignInspectorIDTxt").val($(this).html());
+                $.mobile.navigate("#slctPriorityPage");
+            }
+
+            function slctPriority() {
+                assignComplaintClass = $(this).attr("id");
+                $("#assignComplaintClassTxt").val($(this).html());
+                $.mobile.navigate("#assignCompPage");
+            }
+
+            function assignComplaint() {
+                var SupervisorId = $.jStorage.get("InspectorId");
+                if (assignComplaintID != null || assignInspectorID != null || assignComplaintClass != null) {
+                    GetJSONP("InsertAssignment", {
+                        inspectorId: assignInspectorID,
+                        ComplaintID: assignComplaintID,
+                        ComplaintClass: assignComplaintClass,
+                        SupervisorID: SupervisorId
+                    }, "assignComplaintSuccess", null, null, "#searchPage");
+                }
+                else {
+                    alertNative(eval('infoMissingLbl.' + default_language));
+                    $.mobile.navigate("#page");
+                }
+            }
+
+            function assignComplaintSuccess(data, targetList, nextPage) {
+                assignComplaintID, assignInspectorID, assignComplaintClass = null;
+                var pJSON = StringifyAndParse(data);
+                if (pJSON == "1") {
+                    alertNative(eval('sentSuccessfullyLbl.' + default_language));
+                } else if (pJSON == "2") {
+                    alertNative(eval('assignExistLbl.' + default_language))
+                } else {
+                    alertNative(eval('errorGeneralLbl.' + default_language));
+                }
+
+                $("#supAssignBtnDiv").hide();
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function submitSupVisorAction() {
+                GetJSONP("SupervisorActionUpdate", {
+                    AssignID: $("#assignIDTxt").val(),
+                    assignDepName: $("#visitDepartmentList").val(),
+                    supervisorID: $.jStorage.get("InspectorId")
+                }, "SupervisorActionSuccess", null, null, "#inspectionInbox");
+            }
+
+            function SupervisorActionSuccess(data, targetList, nextPage) {
+                //$("#allDepartmentList").selectmenu('refresh');
+                var pJSON = StringifyAndParse(data);
+                if (data == 1) {
+                    alertNative(eval('sentSuccessfullyLbl.' + default_language));
+                } else {
+                    alertNative(eval('errorGeneralLbl.' + default_language));
+                }
+                $("#visitImage1").hide();
+                $("#visitImage2").hide();
+                $("#visitImage3").hide();
+                $("#visitImage4").hide();
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function preSubmitComplaint() {
+            
+            //submitComplaint();
+            
+                if ($.jStorage.get("UserName") != null) {
+
+                    if ($("#uploadImage").attr("src") != "") {
+                        uploadPhoto("#uploadImage");
+                    } else {
+                        submitComplaint();
+                    }
+                } else {
+                    alertNative(eval('noUserInfo.' + default_language));
+                    $.mobile.navigate("#userPage");
+                }
+            }
+
+            function submitComplaint() {
+                GetJSONP("Addnew940Complaint", {
+                    CatID: $("#slctCompParNameId").val(),
+                    subCatID: $("#slctCompNameId").val(),
+                    MunicipalityID: $("#slctSUBMUNId").val(),
+                    DistrictID: $("#slctDISTId").val(),
+                    subDistrictID: $("#slctsubDISTId").val(),
+                    streetName: $("#slctSTRTName").val(),
+                    streetNo: $("#slctSTRTId").val(),
+                    CreatorName: $.jStorage.get("UserName"),
+                    CreatorMobile: $.jStorage.get("Mobile"),
+                    CreatorPhone: $.jStorage.get("Mobile"),
+                    CreatorEmail: $.jStorage.get("Email"),
+                    CreatorNatID: $.jStorage.get("NID"),
+                    ComplaintDesc: $("#slctCompDescTxt").val(),
+                    GPSLat: $("#GPSLat").val(),
+                    GPSLong: $("#GPSLon").val(),
+                    img: $("#pictureTxt").val()
+                }, submitComplaintSuccess, onFail, null, "#page");
+            }
+
+            function submitComplaintSuccess(data, targetList, nextPage) {
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    if (pJSON.Result == "Success") {
+                        var successMsg = eval('compSubmitSuccessLbl.' + default_language) + "\n" + eval('complaintNoLbl.' + default_language) + ": " + pJSON.Message;
+                        alertNative(successMsg);
+                        $("#slctCompParNameId").val("");
+                        $("#slctCompNameId").val("");
+                        $("#slctCompDescTxt").val("");
+                        $("#pictureTxt").val("");
+                        $("#uploadStatusTxt").html("");
+                        $("#uploadImage").attr("src", "");
+                        $("#uploadImage").hide();
+                        if (nextPage != null)
+                            $.mobile.navigate(nextPage);
+                    }
+                    //Added by AAziz - display message if failed
+                    else {
+                        //var failMsg = eval('compSubmitSuccessLbl.' + default_language) + "\n" + eval('complaintNoLbl.' + default_language) + ": " + pJSON.Message;
+                        var failMsg = pJSON.Message;
+                        alertNative(failMsg);
+                    }
+                    //----------------------------------------------
+                }
+                else {
+                    var failureMsg = eval('compSubmitFailureLbl.' + default_language) + "\n" + pJSON.Message;
+                    alertNative(failureMsg);
+                }
+            }
+
+            function getInspectList(arg) {
+                var InspectorId = $.jStorage.get("InspectorId");
+                if (InspectorId != null) {
+                    GetJSONP("getAssignByInspectorID", { inspectorID: InspectorId, visit: arg }, "loadInspectList", null, null, "#inspectListPage");
+                }
+            }
+
+            function getNewAssignList() {
+                $("#inspectListPageLbl").html(eval('newAssignLbl.' + default_language));
+                $("#inspectVisitInputDiv").show();
+                getInspectList("New");
+            }
+
+            function getVisitedAssignList() {
+                $("#inspectListPageLbl").html(eval('visitedAssignLbl.' + default_language));
+                getInspectList("Visited");
+            }
+
+            function getCompBySupID() {
+                $("#inspectListPageLbl").html(eval('inboxAssignLbl.' + default_language));
+                if ($.jStorage.get("Role") == "supervisor") {
+                    var InspectorId = $.jStorage.get("InspectorId");
+                    if (InspectorId != null) {
+                        GetJSONP("GetCompBySupID", { SupervisorID: InspectorId }, "loadInspectList", null, "#InspectListview", "#inspectListPage");
+                        $("#visitInfoDiv").show();
+                    }
+                } else {
+                    alertNative(eval('superOnlyListLbl.' + default_language));
+                }
+            }
+
+            function loadInspectList(data, targetList, nextPage) {
+                $("#InspectListview").html("");
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    for (var i in pJSON) {
+                        $("<li><a class='ui-btn ui-btn-icon-right ui-icon-carat-r' id='" + pJSON[i].AssignID + "'>" + pJSON[i].ComplaintNo + "</a></li>").appendTo("#InspectListview");
+                    }
+                }
+                else {
+                    $("<li><a class='ui-btn'>" + eval('noInfo.' + default_language) + "</a></li>").appendTo("#InspectListview");
+                }
+
+                //var Role = $.jStorage.get("Role");
+                //console.log("Role:" + Role);
+                //if ($.jStorage.get("Role")) {
+                //    showInspectorDiv();
+                //}
+
+                $("#supAssignBtnDiv").hide();
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function getVisitinfo(assignId) {
+                GetJSONP("getVisitDetailsByAssignId", { AssignID: assignId }, "loadVisitinfoSuccess", null, null, null);
+            }
+
+            function loadVisitinfoSuccess(data, targetList, nextPage) {
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    $("#inspectorNameTxt").val(pJSON[0].InspectorName);
+                    $("#visitTimeTxt").val(pJSON[0].inspectionTime);
+                    $("#visitCommentTxt").val(pJSON[0].comment);
+                    $("#visitDepartmentList").find("option").filter(function () {
+                        return $(this).val() == pJSON[0].AssignDep;
+                    }).prop('selected', true);
+                    //show image
+                    if (pJSON[0].Image1) {
+                        $("#visitImage1").attr("src", "data:image/jpeg;base64," + pJSON[0].Image1)
+                        $("#visitImage1").show();
+                    }
+                    if (pJSON[0].Image2) {
+                        $("#visitImage2").attr("src", "data:image/jpeg;base64," + pJSON[0].Image2)
+                        $("#visitImage2").show();
+                    }
+                    if (pJSON[0].Image3) {
+                        $("#visitImage3").attr("src", "data:image/jpeg;base64," + pJSON[0].Image3)
+                        $("#visitImage3").show();
+                    }
+                    if (pJSON[0].Image4) {
+                        $("#visitImage4").attr("src", "data:image/jpeg;base64," + pJSON[0].Image4)
+                        $("#visitImage4").show();
+                    }
+
+                    $("#visitDepartmentList").selectmenu("refresh");
+                }
+            }
+
+            function searchComp() {
+                if ($.jStorage.get("Role") == "supervisor") {
+                    $("#supAssignBtnDiv").show();
+                }
+                getComplaintInfoByID($("#searchCompTxt").val());
+            }
+
+            function getDepartments() {
+                if ($("#allDepartmentList").html() == "") {
+                    GetJSONP("GetAllDepartment", "null", "loadDepartmentsSuccess", null, "#allDepartmentList", null);
+                }
+                if ($("#visitDepartmentList").html() == "") {
+                    GetJSONP("GetAllDepartment", "null", "loadDepartmentsSuccess", null, "#visitDepartmentList", null);
+                }
+            }
+
+            function loadDepartmentsSuccess(data, targetList, nextPage) {
+                //$(targetList).html("");
+                console.log(targetList)
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    for (var i in pJSON) {
+                        $("<option style='background-color: #1f1f1f;' value='" + pJSON[i].id + "'>" + pJSON[i].Name + "</option>").appendTo(targetList);
+                    }
+                }
+            }
+
+            function inspectListBckBtn() {
+                $("#inspectVisitInputDiv").hide();
+                $("#visitInfoDiv").hide();
+                $("#assignIDTxt").val("");
+            }
+
+            function getCompInfo4Inspectors() {
+                getVisitinfo($(this).attr('id'));
+                getComplaintInfoByID($(this).html());
+                $("#assignIDTxt").val($(this).attr('id'));
+            }
+
+            function prepareVisit() {
+                var imageNames = "";
+                $("img[name^='uploadImage']").each(function () {
+                    console.log($(this).attr("name") + "/" + $(this).attr("src"));
+                    if ($(this).attr("src")) {
+                        if (imageNames == "") {
+                            imageNames = ("#" + $(this).attr("name"));
+                        }
+                        else {
+                            imageNames += "," + ("#" + $(this).attr("name"));
+                        }
+                    }
+                });
+                if (imageNames != "") {
+                    console.log("uploadPhotos(" + imageNames + ")");
+                    uploadPhotos(imageNames);
+                }
+                else {
+                    addVisit(""); //empty string argument
+                }
+            }
+
+            function addVisit(imagefilenames) {
+                GetJSONP("AddVisit", {
+                    comment: $("#inspectorCommentTxt").val(),
+                    AssDepName: $("#allDepartmentList").val(),
+                    AssignID: $("#assignIDTxt").val(),
+                    imageName: imagefilenames
+                }, "addVisitSuccess", null, null, "#inspectionInbox");
+            }
+
+            function addVisitSuccess(data, targetList, nextPage) {
+                var pJSON = StringifyAndParse(data);
+                if (data == 1) {
+                    alertNative(eval('sentSuccessfullyLbl.' + default_language));
+                } else {
+                    alertNative(eval('errorGeneralLbl.' + default_language));
+                }
+                $("#inspectorCommentTxt").val("");
+                $("#allDepartmentList").val("");
+                $("#assignIDTxt").val("");
+                $("#addInspectPhotosDiv").html("");
+                extInspPicDiv = 0;
+                $("#addInspectPhotosBtn").css("display", "block");
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function capturePhoto(caller) {
+                var imgNo = (caller.split("cameraBtn"))[1];
+                navigator.camera.getPicture(function (imageData) {
+                    $("#uploadImage" + imgNo).attr('src', imageData);
+                    $("#uploadImage" + imgNo).show();
+                }, onFail, {
+                    quality: 40,
+                    destinationType: navigator.camera.DestinationType.FILE_URI,
+                    targetWidth: 1600,
+                    targetHeight: 1200
+                });
+            }
+
+            function capturePhotoEdit() {
+                navigator.camera.getPicture(onPhotoDataSuccess, onFail, {
+                    quality: 25,
+                    allowEdit: true,
+                    destinationType: navigator.camera.DestinationType.DATA_URL
+                });
+            }
+
+            function getPhoto(caller) {
+                console.log(caller);
+                var imgNo = (caller.split("picLibBtn"))[1];
+                navigator.camera.getPicture(function (imageData) {
+                    console.log(imageData);
+                    $("#uploadImage" + imgNo).attr('src', imageData);
+                    $("#uploadImage" + imgNo).show();
+                }, onFail, {
+                    destinationType: navigator.camera.DestinationType.FILE_URI,
+                    sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY,
+                    quality: 25,
+                    correctOrientation: true,
+                    saveToPhotoAlbum: true,
+                    allowEdit: true//,
+                    //targetWidth: 1600,
+                    //targetHeight: 1200
+                });
+            }
+
+            function onPhotoDataSuccess(imageData) {
+                //console.log(caller);
+                $("#uploadImage").attr('src', "data:image/jpeg;base64," + imageData);
+                $("#uploadImage").show();
+            }
+
+            function onPhotoURISuccess(imageURI) {
+                $("#uploadImage").attr('src', imageURI);
+                $("#uploadImage").show();
+            }
+
+            function uploadPhoto(imageHolder) {
+                var imageURI = $(imageHolder).attr("src");
+                var options = new FileUploadOptions();
+                options.fileKey = "file";
+                options.fileName = imageURI.substr(imageURI.lastIndexOf('/') + 1);
+                options.mimeType = "image/jpeg";
+                options.chunkedMode = false;
+
+                if (options.fileName.search('\\?') != -1) {
+                    var splitArr = options.fileName.split("?");
+                    options.fileName = splitArr[1];
+                }
+
+                var params = {};
+                if (options.fileName.search(".jpg") != -1) {
+                    params.fileName = options.fileName;
+                    $("#pictureTxt").val(options.fileName);
+                } else {
+                    params.fileName = options.fileName + ".jpg";
+                    $("#pictureTxt").val(options.fileName + ".jpg");
+                }
+                options.params = params;
+
+                var ft = new FileTransfer();
+                ft.onprogress = function (progressEvent) {
+                    if (progressEvent.lengthComputable) {
+                        var perc = Math.floor(progressEvent.loaded / progressEvent.total * 100);
+                        $("#uploadStatusTxt").html(perc + "% " + eval('uploadedLbl.' + default_language));
+                        $("#progress-bar-div").show();
+                        $("#progress-bar").val(perc);
+                        $("#progress-bar").slider('refresh');
+                    } else {
+                        $("#progress-bar").val(0);
+                    }
+                };
+                ft.upload(imageURI, encodeURI("http://maps.jeddah.gov.sa/UploadImage/upload.php"), picUploadSuccess, picUploadFail, options);
+            }
+
+            function uploadPhotos(imageHolders) {
+                $.mobile.loading("show", {
+                    text: eval('loadingLbl.' + default_language),
+                    textVisible: true,
+                    theme: "a",
+                    html: ""
+                });
+                var images = imageHolders.split(",");
+                var imagefilenames = "";
+                var imageuploadsuccess = 0;
+                var ft = {};
+                for (var i in images) {
+                    var imgNo = (i + 1);
+                    var imageURI = "";
+                    imageURI = $(images[i]).attr("src");
+
+                    var options = new FileUploadOptions();
+                    options.fileKey = "file";
+                    options.fileName = imageURI.substr(imageURI.lastIndexOf('/') + 1);
+                    options.mimeType = "image/jpeg";
+                    options.chunkedMode = false;
+
+                    if (options.fileName.search('\\?') != -1) {
+                        var splitArr = options.fileName.split("?");
+                        options.fileName = splitArr[1];
+                    }
+
+                    var params = {};
+                    if (options.fileName.search(".jpg") != -1) {
+                        params.fileName = options.fileName;
+                        $("#pictureTxt" + imgNo).val(options.fileName);
+                    } else {
+                        params.fileName = options.fileName + ".jpg";
+                        $("#pictureTxt" + imgNo).val(options.fileName + ".jpg");
+                    }
+
+                    if (imagefilenames == "") {
+                        imagefilenames = params.fileName;
+                    }
+                    else {
+                        imagefilenames += "," + params.fileName;
+                    }
+                    options.params = params;
+                    console.log("imageURI:" + imageURI);
+                    console.log(options);
+                    console.log("imagefilenames:" + imagefilenames);
+                    ft[i] = new FileTransfer();
+                    /*ft.onprogress = function (progressEvent) {
+                    if (progressEvent.lengthComputable) {
+                    var perc = Math.floor(progressEvent.loaded / progressEvent.total * 100);
+                    $("#uploadStatusTxt"+imgNo).html(perc + "% " + eval('uploadedLbl.' + default_language));
+                    $("#progress-bar-div"+imgNo).show();
+                    $("#progress-bar"+imgNo).val(perc);
+                    $("#progress-bar"+imgNo).slider('refresh');
+                    } else {
+                    $("#progress-bar"+imgNo).val(0);
+                    }
+                    };*/
+                    ft[i].upload(imageURI, encodeURI("http://maps.jeddah.gov.sa/UploadImage/upload.php"),
+					function (r) {
+					    imageuploadsuccess++;
+					    $("#progress-bar-div" + imgNo).hide();
+					    $("#uploadStatusTxt" + imgNo).html(eval('picUploadSucLbl.' + default_language));
+					    if (imageuploadsuccess == (images.length)) {
+					        addVisit(imagefilenames);
+					    }
+					}
+					, picUploadFail, options);
+                }
+            }
+
+            function picUploadSuccess(r) {
+                //console.log("Code = " + r.responseCode);
+                //console.log("Response = " + r.response);
+                //console.log("Sent = " + r.bytesSent);
+                $("#progress-bar-div").hide();
+                $("#uploadStatusTxt").html(eval('picUploadSucLbl.' + default_language));
+                submitComplaint();
+            }
+
+            function picUploadFail(error) {
+                alertNative((eval('msgFileUploadError.' + default_language)) + error.code);
+                //console.log("upload error source " + error.source);
+                //console.log("upload error target " + error.target);
+            }
+
+            function alertNative(msg) {
+                navigator.notification.alert(msg, alertCallback(msg), eval("appTitle." + default_language), eval("okayLbl." + default_language));
+                //alert(msg);
+            }
+
+            function alertCallback(msg) {
+                /*
+                if (msg == nidErrMsg){
+                $('#nidTI').val('');
+                } else if (msg == mobErrMsg){
+                $('#mobTI').val('');
+                }
+                else if (msg == emailErrMsg){
+                $('#emailTI').val('');
+                }
+                */
+
+            }
+
+            function checkConn() {
+                try {
+                    if (navigator.network.connection.type == "none") {
+                        alertNative(eval('noInternetLbl.' + default_language));
+                        return false;
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                catch (error) {
+                    //console.log(error);
+                }
+            }
+
+            function openExternal(elem) {
+                window.open(elem.href, "_system");
+                return false; // Prevent execution of the default onClick handler 
+            }
+
+            function addInspectPhotosToDiv() {
+                var checkifphoto;
+                if (extInspPicDiv == 0) {
+                    checkifphoto = true;
+                } else {
+                    checkifphoto = typeof ($("#uploadImage" + extInspPicDiv).attr("src"));
+                    console.log(checkifphoto);
+                }
+                if (checkifphoto != "undefined") {
+                    extInspPicDiv += 1;
+                    var divHtml = "<div class='ui-grid-a'>" +
+                "<div class='ui-block-a'><a id='cameraBtn" + extInspPicDiv + "' name='cameraBtn" + extInspPicDiv + "' data-role='button' class='ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-camera ui-btn-b'></a></div>" +
+                "<div class='ui-block-b'><a id='picLibBtn" + extInspPicDiv + "' name='picLibBtn" + extInspPicDiv + "' data-role='button' class='ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-grid ui-btn-b'></a></div></div>" +
+                "<div id='uploadStatusTxt" + extInspPicDiv + "' class='label'></div>" +
+                "<div style='display:none;' id='progress-bar-div" + extInspPicDiv + "' class='progress-bar'>" +
+				"<input type='range' value='0' min='0' max='100' s-highlight='true' data-mini='true' data-theme='b' id='progress-bar" + extInspPicDiv + "' /></div>" +
+                "<img style='width:100%; border: 2px white solid; display:none;' class='ui-corner-all' id='uploadImage" + extInspPicDiv + "' name='uploadImage" + extInspPicDiv + "' />" +
+                "<textarea cols='2' id='pictureTxt" + extInspPicDiv + "' disabled='disabled' style='display:none'></textarea>";
+
+                    $(divHtml).appendTo("#addInspectPhotosDiv");
+                    $(".ui-icon-camera").html(eval('cameraLbl.' + default_language));
+                    $(".ui-icon-grid").html(eval('picLibLbl.' + default_language));
+                    if (extInspPicDiv == 4) {
+                        $("#addInspectPhotosBtn").css("display", "none");
+                    }
+                }
+            }
+
+            function onSuccess(message) {
+                clearInterval(regGCMDevice);
+                $.mobile.loading("hide");
+                console.log('Success:');
+                console.log(message);
+            }
+
+            function onFail(message) {
+                console.log('Failed because:');
+                console.log(message);
+            }
+
+            //function for Validating Saudi National Citizen ID
+            function nidValidate(SEGEL_NO) {
+                var i, TOT;
+                var TEMP, FIN;
+                TOT = 0;
+                var segel_num_str = SEGEL_NO.toString();
+                if (segel_num_str == "0000000000"
+				  || segel_num_str == "1111111111"
+				  || segel_num_str == "2222222222"
+				  || segel_num_str == "3333333333"
+				  || segel_num_str == "4444444444"
+				  || segel_num_str == "5555555555"
+				  || segel_num_str == "6666666666"
+				  || segel_num_str == "7777777777"
+				  || segel_num_str == "8888888888"
+				  || segel_num_str == "9999999999") {
+                    return false;
+                }
+
+
+                for (i = 0; i < 9; i++) {
+                    if (i == 0 || i == 2 || i == 4 || i == 6 || i == 8) {
+                        TEMP = (Number(SEGEL_NO.substr(i, 1)) * 2).toString();
+                        if (TEMP.length == 1) {
+                            TEMP = "0" + (Number(SEGEL_NO.substr(i, 1)) * 2);
+                        }
+                        else {
+                            TEMP = (Number(SEGEL_NO.substr(i, 1)) * 2).toString();
+                        }
+                        TOT = TOT + Number(TEMP.substr(0, 1)) + Number(TEMP.substr(1, 1));
+                    }
+                    else {
+                        TOT = TOT + Number(SEGEL_NO.substr(i, 1));
+                    }
+                }
+                if (TOT.toString().length == 1) {
+                    FIN = "0" + TOT.toString();
+                }
+                else {
+                    FIN = TOT.toString();
+                }
+                if (Number(FIN.substr(2, 1)) == Number(SEGEL_NO.substr(9, 1)) || Number(SEGEL_NO.substr(9, 1)) == 10 - Number(FIN.substr(1, 1))) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+
+            //Validation for Saudi Arabian Mobile Numbers
+            function mNumberValidate(mobile_number) {
+                var mNumRegex = /^(05)(0|1|3|4|5|6|7|8|9)([0-9]{7})+/igm;
+                //(5|0|3|6|4|9|1)
+
+                var patt = new RegExp(mNumRegex);
+                var res = patt.test(mobile_number);
+                if (res == true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            //Validation for Email Address
+            function eMailAddressValidate(email_address) {
+                var eMailRegex = /^([0-9a-zA-Z]([-\.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})+/igm;
+                var e_patt = new RegExp(eMailRegex);
+                var res = e_patt.test(email_address);
+                if (res == true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            function get_user_info_email() {
+
+
+                var name = $.jStorage.get("UserName");
+                //alertNative(name);
+                if (name != null) {
+                    $("#txtCitizenName").val(name);
+                    var nid = $.jStorage.get("NID");
+                    $("#txtNationalId").val(nid);
+                    var mob = $.jStorage.get("Mobile");
+                    $("#txtMobileNumber").val(mob);
+                    var email = $.jStorage.get("Email");
+                    $("#txtEmail").val(email);
+                } else {
+                    name = eval('guestLbl.' + default_language);
+                }
+                $("#welcome").text(eval('welcome.' + default_language) + " " + name);
+                $.mobile.loading("hide");
+            }
+
+            //Sending Feedback section - Added by AAziz
+            function submitFeedback() {
+                //if ($("#txtNationalId").val() != "" &&  $("#txtCitizenName").val()!= "" && $("#txtMobileNumber").val()!= "" && $("#txtMessageContent").val() != "" && $("#txtEmail").val() != ""){
+                /*
+                //Check the Internet connection
+                if (checkConn()){
+                //Connected to the internet
+                alertNative("Internet connection is Fine");
+                }
+                else
+                {
+                //Not connected to the internet
+                }
+                */
+
+                if ($("#txtNationalId").val() != "" && $("#txtCitizenName").val() != "" && $("#txtMobileNumber").val() != "" && $("#txtEmail").val() != "") {
+                    //if ($("#txtMessageContent").val() != "" && ($("#ddlMessageType option:selected").text()) != ($("#lblSelectMessageType").text()) && $("#txtMessageTitle").val()!= ""){
+
+                    // checking if all required fields are filled 
+                    if ($("#txtMessageContent").val() != "" && ($("#ddlMessageType option:selected").text()) != "" && ($("#ddlMessageType option:selected").text()) != ($("#lblSelectMessageType").text()) && $("#txtMessageTitle").val() != "") {
+
+					
+					/*MessageContent: $("#txtMessageContent").val() + '\n' + '*' +'Device Platform: '+ DevicePlatform + '\n' +
+							'*' + 'Device Version: '+ DeviceVersion + '\n' + '*' +'Device Model: '+ DeviceModel,*/
+                        GetJSONP("sendEmail", {
+                            Name: $("#txtCitizenName").val(),
+                            ID: $("#txtNationalId").val(),
+                            Mobile: $("#txtMobileNumber").val(),
+                            Email: $("#txtEmail").val(),
+                            MessageContent: $("#txtMessageContent").val() + '\n' + '*' +'Device Platform: '+ DevicePlatform + '\n' +
+							'*' + 'Device Version: '+ DeviceVersion + '\n' + '*' +'Device Model: '+ DeviceModel,
+                            MessageTitle: $("#txtMessageTitle").val(),
+                            MessageType: $("#ddlMessageType option:selected").text(),
+							
+							
+							
+						 //---------------------------------
+                        }, "submitFeedbackSuccess", "onFail", null, "#page");
+
+                    } else {
+                        alertNative(eval('msgAllFieldRequired.' + default_language));
+                        // redirect to the previous page
+                        $.mobile.navigate("#feedbackPage");
+                        //return;
+                    }
+                } else {
+                    alertNative(eval('noUserInfo.' + default_language));
+                    // redirect to the 'User Registration' Page
+                    $.mobile.navigate("#userPage");
+                }
+
+            }
+
+            function submitUserFeedbackSuccess(data, targetList, nextPage) {
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    if (pJSON == true) {
+                       // display message: User feedback submitted successfully
+						alertNative(eval('msgSubmitUserRatingSuccessfully.' + default_language));
+                        //Navigate to the previous page
+                        $.mobile.navigate("#histPage");
+
+
+
+                    }
+                }
+                else {
+				// display message: User feedback submit fail
+                  alertNative(eval('msgSubmitUserRatingFail.' + default_language));
+                }
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+
+            function submitFeedbackSuccess(data, targetList, nextPage) {
+                var pJSON = StringifyAndParse(data);
+                if (pJSON != "") {
+                    if (pJSON == true) {
+                        //var successMsg = "تم إرسال الرسالة بنجاح";
+                        //alertNative(successMsg);
+                        alertNative(eval('msgSentMessageSuccessfully.' + default_language));
+                        //Resetting the feedback form's fields
+                        reset_feedback_form();
+                        //Navigate to the previous page
+                        $.mobile.navigate("#settingPage");
+                    }
+                }
+                else {
+                    //var failureMsg = "يوجد خطأ في الإرسال- الرجاء المحاولة مرة أخرى";
+                    //var failureMsg = "There was an error sending message. Please try again";
+                    //alertNative(failureMsg);
+                    alertNative(eval('msgSendMessageFailed.' + default_language));
+                }
+                if (nextPage != null)
+                    $.mobile.navigate(nextPage);
+            }
+
+            function onFail(message) {
+                console.log('Failed because:');
+                console.log(message);
+            }
+
+            function reset_feedback_form() {
+                $("#feedbackPage").find("#feedbackBasicForm")[0].reset();
+            }
+            //-------------------------------------------------
+
+            //***************************for user rating*****************************************
+            $('#default').raty();
+            $('#precision').raty({
+                space: false, // false: remove space between the stars
+                cancel: false,
+                path: 'img/user_rating_images/custom',
+                cancelOff: 'cancel-off.png',
+                cancelOn: 'cancel-on.png',
+                starOff: 'star-off.png',
+                starOn: 'star-on.png',
+                target: '#precision-hint',
+                targetKeep: true,
+                targetType: 'hint', // score OR hint
+                //starHalf   : 'star-half.png',
+                precision: false,
+		
+				hints: ['يحتاج إلى التحسين', 'مقبول', 'جيد', 'جيد جدا', 'ممتاز'],
+                click: function (score, evt) {
+                    var elem = $("#precision-hint").val();
+                    _userRatingValue = score;
+                    //var elem = document.getElementById("testId").value;
+                    //var x = elem.value;
+                    //alert('ID: ' + this.id + "\nscore: " + score + "\nevent: " + evt.type + "\nValue: " + elem);
+                }
+            });
+            //-----------------------------------------------------------------------------------------
+
+            //Event handlers
+            $("#feedbackForm").validate({
+                submitHandler: function (form) {
+                    //----------------------------------------------
+                    $.jStorage.set("UserName", $("#txtCitizenName").val());
+                    $.jStorage.set("NID", $("#txtNationalId").val());
+                    $.jStorage.set("Mobile", $("#txtMobileNumber").val());
+                    $.jStorage.set("Email", $("#txtEmail").val());
+
+                    get_user_info_email();
+                    //$.mobile.navigate("#settingPage");
+                    //----------------------------------------------
+                }
+            });
+
+            $("#userForm").validate({
+                submitHandler: function (form) {
+                    //Validating National ID Number -- Added by AAziz
+                    if (nidValidate($("#nidTI").val())) {
+                        //Validating Mobile Number -- Added by AAziz
+                        if (mNumberValidate($("#mobTI").val())) {
+                            //Validating Email Address -- Added by AAziz
+                            if (eMailAddressValidate($("#emailTI").val())) {
+                                //----------------------------------------------
+                                $.jStorage.set("UserName", $("#nameTI").val());
+                                $.jStorage.set("NID", $("#nidTI").val());
+                                $.jStorage.set("Mobile", $("#mobTI").val());
+                                $.jStorage.set("Email", $("#emailTI").val());
+                                get_user_info();
+                                $.mobile.navigate("#settingPage");
+                                //----------------------------------------------
+                            } else {
+                                //Display 'email address not valid' error and clear the email address field on form
+                                //alertNative(emailErrMsg);
+                                alertNative(eval('msgIncorrectEmailAddress.' + default_language));
+                                $('#emailTI').val('');
+                            }
+                        } else {
+                            //Display 'mobile number not valid' error and clear the mobile number field on form
+                            //alertNative(mobErrMsg);
+                            alertNative(eval('msgIncorrectMobileNumber.' + default_language));
+                            $('#mobTI').val('');
+                        }
+                    } else {
+                        //Display 'National ID not valid' error and clear the national id number field on form
+                        //alertNative(nidErrMsg);
+                        alertNative(eval('msgIncorrectIdNumber.' + default_language));
+                        $('#nidTI').val('');
+                    }
+                }
+            });
+
+
+            /* click event of User Rating*/
+            $("#btnCancelUserRating").click(function () { $('#precision').raty('reload'); });
+
+            $("#btnSubmitUserRating").click(function () {
+                if (typeof _userRatingValue === 'undefined' || _userRatingValue === null) {
+                    // TODO : Use dynamic message 
+                    alert("Please rate this Complaint");
+                } else {
+                    GetJSONP("UserFeedback", {
+                        userRatingValue: _userRatingValue,
+                        complaintNo: $("#compIdLbl").html(),
+                        nationalId: $.jStorage.get("NID")
+                    }, "submitUserFeedbackSuccess", "onFail", null, "#page");
+
+                }
+
+
+
+                $('#precision').raty('reload');
+            });
+            //-----------------------------
+
+            $("#languageBtn").click(switch_language);
+            $("#histBtn").click(getComplaintHistory);
+            $("#inspectListBckBtn").click(inspectListBckBtn);
+            $("#searchCompBtn").click(searchComp);
+            $("#supAssignBtn").click(getInspectorsList);
+            $("#confSupAssignBtn").click(assignComplaint);
+            $("#newAssignListBtn").click(getNewAssignList);
+            $("#visitedAssignListBtn").click(getVisitedAssignList);
+            $("#inspectFeedbackListBtn").click(getCompBySupID);
+            $("#inspectorSubmitBtn").click(prepareVisit);
+            $("#cameraBtn").click(function () { capturePhoto($(this).attr('id')); });
+            $("#addInspectPhotosDiv").delegate(".ui-icon-camera", 'click', function () { capturePhoto($(this).attr('id')); });
+            $("#addInspectPhotosDiv").delegate(".ui-icon-grid", 'click', function () { getPhoto($(this).attr('id')); });
+            $("#picLibBtn").click(function () { getPhoto($(this).attr('id')); });
+            $("#submitComplaint").click(preSubmitComplaint);
+            $("#newComplaintBtn").click(getComplaintCategories);
+            $("#inspectionListBtn").click(getDepartments);
+            $("#addInspectPhotosBtn").click(addInspectPhotosToDiv);
+            $("#superSubmitBtn").click(submitSupVisorAction);
+
+            $("#mapBtn").click(openMapPage);
+            $("#GeoLocationBtn").click(getLocation);
+
+            // send feedback by Email - Button Click event (Added by AAziz)
+            $("#btnSendFeedback").click(submitFeedback);
+            //$("#btnContactUs").click(get_user_info_email);
+            $("#btnContactUs").click(function () {
+                $("#feedbackPage").find("#feedbackBasicForm option").eq(0).text(eval('lblSelectMessageType.' + default_language));
+                get_user_info_email();
+			
+			// to detect the device information
+			DevicePlatform = device.platform;
+			DeviceVersion = device.version;
+			DeviceModel = device.model;
+			
+			
+			
+            });
+            //-----------------------------------------
+
+            $("#mapBckBtn").click(function () {
+                $.mobile.back();
+                if (marker != null)
+                    marker.setMap(null);
+            });
+            $("#helpBtn").click(function () {
+                $.mobile.navigate("#helpPage");
+            });
+
+            $("#cacheFlushBtn").click(function () {
+                $.jStorage.flush();
+                //alertNative("Cache flushed");
+                alertNative(eval('msgCacheFlushed.' + default_language));
+            });
+
+            //Back button for the feedback form (Reset the form) -- Added by AAziz feedbackformBckBtn
+            $("#feedbackformBckBtn").click(function () {
+                reset_feedback_form();
+                //$("#btnResetFeedbackForm").click();
+                //$("#ddlMessageType").selectedIndex = 0;
+                //document.getElementById('ddlMessageType').selectedIndex = 0;
+                /*
+                $("#srchErrorLbl").text("");
+                $("#compMapImgDiv").hide();
+                $("#compMapMarker").hide();
+                $("#compImg").hide();
+                $("#visitImage1").hide();
+                $("#visitImage2").hide();
+                $("#visitImage3").hide();
+                $("#visitImage4").hide();
+                $("#addInspectPhotosDiv").html("");
+                $("#addInspectPhotosBtn").css("display","block");
+                extInspPicDiv = 0;
+                */
+            });
+
+
+            $("#slctCatBckBtn").click(function () {
+                $("#slctCompNameId").val("");
+            });
+
+            $("#compInfoBckBtn").click(function () {
+                $("#srchErrorLbl").text("");
+                $("#compMapImgDiv").hide();
+                $("#compMapMarker").hide();
+                $("#compImg").hide();
+                $("#visitImage1").hide();
+                $("#visitImage2").hide();
+                $("#visitImage3").hide();
+                $("#visitImage4").hide();
+                $("#addInspectPhotosDiv").html("");
+                $("#addInspectPhotosBtn").css("display", "block");
+                extInspPicDiv = 0;
+            });
+
+            $("#slctSubCatBckBtn").click(function () {
+                $("#slctSubCatList").html("");
+            });
+            $("#histBckBtn").click(function () {
+                $("#compHistList").html("");
+            });
+
+            $("#slctInspectorBckBtn").click(function () {
+                $("#slctInspectorList").html("");
+            });
+
+            $('#slctCatList').on('click', 'a', getComplaintSubCategories);
+            $('#slctSubCatList').on('click', 'a', getMapforLocation);
+            $("#InspectListview").on('click', 'a', getCompInfo4Inspectors);
+            $("#slctMapLocationList").on('click', 'a', generateComplaint);
+            $("#slctInspectorList").on('click', 'a', slctInspector);
+            $("#slctPriorityList").on('click', 'a', slctPriority);
+            $("#compHistList").on('click', 'a', function () {
+                if ($.isNumeric($(this).attr('id')))
+                    getComplaintInfoByID($(this).attr('id'));
+            });
+            $(document).on("pagebeforeshow", "#mapPage", checkConn);
+        });   //jQuery wrapper
+
+        function resizeMap() {
+            if (map) {
+                $('#map').css("width", "auto");
+                $('#map').css("height", "100%");
+                //map.reposition();
+                //map.resize();
+            }
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                $.mobile.loading("show");
+                navigator.geolocation.getCurrentPosition(zoomToLocation, locationError, { maximumAge: 5000, timeout: 7500 });
+                // , { maximumAge: 5000, timeout: 7500, enableHighAccuracy: true }
+            }
+        }
+
+        function zoomToLocation(position) {
+            //ToUTM(location.coords.latitude, location.coords.longitude);
+            //var localpt = new Point([Number(X), Number(Y)], PROJCS);		  
+            //addGraphic(localpt);
+            //maps.centerAndZoom(location, 6);
+            var geolocate = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            maps.setCenter(geolocate);
+
+            /*if (Marker != null)
+            Marker.setMap(null);*/
+
+            $.mobile.loading("hide");
+            /* var Markers = new google.maps.Marker({
+            position: position.latLng,
+            map: maps
+            //icon: image
+            });*/
+            var iconoMarca = "img/bluedot.png";
+            var markers = new google.maps.Marker({
+                position: geolocate, // position.latLng,
+                map: maps,
+                icon: iconoMarca,
+                optimized: false
+            });
+
+            //resizeMap();
+        }
+
+        function locationError(error) {
+            $.mobile.loading("hide");
+            alertNative('code: ' + error.code + '\n' +
+                    'message: ' + error.message + '\n');
+            //switch (error.code) {
+            //    case error.PERMISSION_DENIED:
+            //        break;
+            //    case error.POSITION_UNAVAILABLE:
+            //        break;
+            //    case error.TIMEOUT:
+            //        break;
+            //    default:
+            //        break;
+            //}
+        }
+        /* try {
+        require(["esri/map", "esri/geometry/Point", "esri/layers/ArcGISTiledMapServiceLayer", "esri/graphic", "esri/dijit/PopupMobile", "esri/InfoTemplate", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/symbols/PictureMarkerSymbol", "dojo/_base/Color", "dojo/dom", "dojo/dom-construct", "dojo/parser", "esri/config", "esri/dijit/Geocoder", "dojo/domReady!"],
+        function (Map, Point, Tiled, Graphic, PopupMobile, InfoTemplate, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, PictureMarkerSymbol, Color, dom, domConstruct, parser, esriConfig, Geocoder) {
+        parser.parse();
+        esri.config.defaults.io.proxyUrl = "http://maps1.jeddah.gov.sa/proxy/proxy.ashx";
+
+        map = new Map("map", {
+        slider: true,
+        zoom: 4,
+        logo: false,
+        wkid: 32637
+        });
+
+        dojo.connect(map, "onLoad", mapReady);
+        var PROJCS = new esri.SpatialReference('PROJCS["WGS_84_UTM_zone_37N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["false_easting",500000.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",39.0],PARAMETER["scale_factor",0.9996],PARAMETER["latitude_of_origin",0.0],UNIT["Meter",1.0]]');
+        var base_vector = new Tiled("http://maps1.jeddah.gov.sa/arcgis/rest/services/JeddahBaseMap_New/MapServer");
+        map.addLayer(base_vector);
+
+
+        function mapReady(map) {
+        dojo.connect(map, "onClick", executeIdentifyTask);
+        //create identify tasks and setup parameters
+        identifyTask = new esri.tasks.IdentifyTask("http://maps1.jeddah.gov.sa/arcgis/rest/services/JeddahBaseMap_New/MapServer");
+        identifyParams = new esri.tasks.IdentifyParameters();
+        identifyParams.tolerance = 5;
+        //20
+        //identifyParams.returnGeometry = true;
+        identifyParams.layerIds = [10, 8, 6];
+        identifyParams.layerOption = esri.tasks.IdentifyParameters.LAYER_OPTION_ALL;
+        identifyParams.width = map.width;
+        identifyParams.height = map.height;
+        }
+
+        function executeIdentifyTask(evt) {
+        map.graphics.clear();
+        var symbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 15, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 255, 0.5]), 8), new Color([0, 0, 255]));
+
+        identifyParams.geometry = evt.mapPoint;
+        identifyParams.mapExtent = map.extent;
+        var SUBMUN, DIST, STRT = "";
+        var deferred = identifyTask.execute(identifyParams);
+
+        deferred.addCallback(function (response) {
+        console.log(response);
+        for (var i in response) {
+        if (response[i].layerId == 10) {
+        SUBMUN = response[i].value;
+        $("#slctSUBMUNId").val(response[i].feature.attributes['رقم البلدية الفرعية']);
+        }
+        if (response[i].layerId == 8) {
+        DIST = response[i].value;
+        $("#slctDISTId").val(response[i].feature.attributes['رقم الحي']);
+        }
+        if (response[i].layerId == 6) {
+        STRT = response[i].value;
+        $("#slctSTRTName").val(STRT);
+        $("#slctSTRTId").val(response[i].feature.attributes['رقم الشارع']);
+        STRT = ($.trim(STRT) != "") ? " / " + STRT : "";
+        }
+
+        }
+        if (response != "") {
+        if ($("#slctCompNameId").val() != "") {
+        $("#mapLocLbl").html(eval('confLocLbl.' + default_language));
+        $("#slctMapLocationList").html("<a class='ui-btn ui-btn-icon-right ui-icon-carat-r'>" + SUBMUN + " / " + DIST + STRT + "</a>");
+        } else {
+        $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+        $("#slctMapLocationList").html(SUBMUN + " / " + DIST + STRT);
+        }
+        }
+        else {
+        $("#mapLocLbl").html(eval('locInfoLbl.' + default_language));
+        $("#slctMapLocationList").html(eval('outOfJedLbl.' + default_language));
+        }
+        });
+        var graphic = new Graphic(evt.mapPoint, symbol, null);
+        map.graphics.add(graphic);
+        latlon = new Array(2);
+        UTMXYToLatLon(evt.mapPoint.x, evt.mapPoint.y, 37, false, latlon);
+        $("#GPSLon").val(RadToDeg(latlon[1]));
+        $("#GPSLat").val(RadToDeg(latlon[0]));
+        var screenPnt = map.toScreen(evt.mapPoint);
+        $("#slctMapLocation").popup("open", {
+        x: screenPnt.x,
+        y: screenPnt.y + 45
+        });
+        }
+
+        function getLocation() {
+        if (navigator.geolocation) {
+        $.mobile.loading("show");
+        navigator.geolocation.getCurrentPosition(zoomToLocation, locationError , { maximumAge: 5000, timeout: 7500});
+        // , { maximumAge: 5000, timeout: 7500, enableHighAccuracy: true }
+        }
+        }
+
+        function zoomToLocation(location) {
+        ToUTM(location.coords.latitude, location.coords.longitude);
+        var localpt = new Point([Number(X), Number(Y)], PROJCS);
+        resizeMap();
+        addGraphic(localpt);
+        map.centerAndZoom(localpt, 6);
+        $.mobile.loading("hide");
+        }
+
+        function locationError(error) {
+        $.mobile.loading("hide");
+        alertNative('code: ' + error.code + '\n' +
+        'message: ' + error.message + '\n');
+        //switch (error.code) {
+        //    case error.PERMISSION_DENIED:
+        //        break;
+        //    case error.POSITION_UNAVAILABLE:
+        //        break;
+        //    case error.TIMEOUT:
+        //        break;
+        //    default:
+        //        break;
+        //}
+        }
+
+        function addGraphic(pt) {
+        mapClear();
+        var symbol = new PictureMarkerSymbol("img/bluedot.png", 40, 40);
+        graphic2 = new Graphic(pt, symbol);
+        map.graphics.add(graphic2);
+        }
+
+        function mapClear() {
+        if (map.graphics.visible)
+        map.graphics.clear();
+        }
+
+        function toggleBasemap() {
+        if (base_vector.visible == true) {
+        base_satellite.show();
+        base_vector.hide();
+        } else if (base_satellite.visible == true) {
+        base_satellite.hide();
+        base_vector.show();
+        }
+        }
+
+        function resizeMap() {
+        if (map) {
+        $('#map').css("width", "auto");
+        $('#map').css("height", "100%");
+        map.reposition();
+        map.resize();
+        }
+        }
+
+        $("#GeoLocationBtn").click(getLocation);
+        $("#MapToggleBtn").click(toggleBasemap);
+        $(document).on("pagebeforeshow", "#mapPage", resizeMap);
+        $(document).on("pageshow", "#mapPage", getLocation);
+        }); //map wrapper
+        }
+        catch (error) {
+        alertNative("Map Error");
+        }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function hbar()
+{
+  //  alert(device.platform);
+var x="0px";
+
+
+
+
+
+
+if(device.platform == 'iOS')
+{
+ x= "20px";
+
+}
+
+else
+{
+ x= "0px";
+
+}
+
+
+
+
+
+document.getElementById("hbn").style.height= x;
+document.getElementById("hbn1").style.height= x;
+document.getElementById("hbn2").style.height= x;
+document.getElementById("hbn3").style.height= x;
+document.getElementById("hbn4").style.height= x;
+document.getElementById("hbn5").style.height= x;
+document.getElementById("hbn6").style.height= x;
+document.getElementById("hbn7").style.height= x;
+document.getElementById("hbn8").style.height= x;
+document.getElementById("hbn9").style.height= x;
+document.getElementById("hbn10").style.height= x;
+document.getElementById("hbn11").style.height= x;
+document.getElementById("hbn12").style.height= x;
+document.getElementById("hbn13").style.height= x;
+document.getElementById("hbn14").style.height= x;
+document.getElementById("hbn15").style.height= x;
+document.getElementById("hbn16").style.height= x;
+document.getElementById("hbn17").style.height= x;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+
+
+
+
+
+
+
+</head>
+<body onload="hbar()">
+    <div data-role="page" id="page">
+<div id="hbn2" style=" visability:hidden;"></div>
+        <div data-role="main" class="ui-content">
+            <div id="logo">
+            </div>
+            <div class="title" id="welcome">
+            </div>
+            <div id="navigation">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a id="newComplaintBtn" class="white-square" data-role="button" data-theme="d">
+                            <img src="img/icons/add_file-128.png" width="50%" />
+                            <span class="navButtons" id="newLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a id="histBtn" class="white-square" data-role="button" data-theme="d" href="#histPage">
+                            <img src="img/icons/calendar-128.png" width="50%" />
+                            <span class="navButtons" id="histLbl"></span></a>
+                    </div>
+                    <div id="userSwitch" class="ui-block-a">
+                        <!-- Uncomment below line if you want to test the application for the Inspector -->
+                        <!-- <a id="mapBtn" class="white-square" data-role="button" data-theme="d" href="#inspectionPage"> -->
+                        <a id="mapBtn" class="white-square" data-role="button" data-theme="d">
+                            <img id="switchImg" src="img/icons/world_map-128.png" width="50%" />
+                            <span class="navButtons" id="switchLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a class="white-square" data-role="button" data-theme="d" href="#settingPage">
+                            <img src="img/icons/settings-128.png" width="50%" />
+                            <span class="navButtons" id="setLbl"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="settingPage">
+<div id="hbn3" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <!--<a href="#settingPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l"></a> -->
+            <a href="main.html" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <!-- <h1 id="userProfile"></h1> -->
+            <h1 id="setting">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <div id="logo">
+            </div>
+            <!-- <div id="setting" class="title"></div> -->
+            <div id="navigation">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a id="userBtn" class="white-square" data-role="button" data-theme="d" href="#userPage">
+                            <img src="img/icons/guest-128.png" width="50%" />
+                            <span class="navButtons" id="userLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a id="languageBtn" class="white-square" data-role="button" data-theme="d">
+                            <img id="languageImg" src="img/icons/english-128.png" width="50%" />
+                            <span class="navButtons" id="langLbl"></span></a>
+                    </div>
+                    <div class="ui-block-a">
+                        <a id="helpBtn" class="white-square" data-role="button" data-theme="d">
+                            <img src="img/icons/help-128.png" width="50%" />
+                            <span class="navButtons" id="helpLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a id="btnContactUs" class="white-square" data-role="button" data-theme="d" data-direction="reverse"
+                            href="#feedbackPage">
+                            <img src="img/icons/contact_us-128.png" width="50%" />
+                            <span class="navButtons" id="lblBtnContactUs"></span></a>
+                        <!-- <img src="img/icons/undo-128.png" width="50%" /> -->
+                        <!-- <span class="navButtons" id="backLbl"></span></a> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="inspectionPage">
+<div id="hbn4" style=" visability:hidden;"></div>
+        <div role="main" class="ui-content">
+            <div id="logo">
+            </div>
+            <div id="inspectLbl" class="title">
+            </div>
+            <div id="navigation">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a id="inspectionListBtn" class="white-square" data-role="button" data-theme="d"
+                            href="#inspectionInbox">
+                            <img src="img/icons/list-128.png" width="50%" />
+                            <span class="navButtons" id="listLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a class="white-square" data-role="button" data-theme="d" href="#searchPage">
+                            <img src="img/icons/search-128.png" width="50%" />
+                            <span class="navButtons" id="searchLbl"></span></a>
+                    </div>
+                    <div class="ui-block-a">
+                        <a class="white-square" data-role="button" href="#mapPage">
+                            <img src="img/icons/world_map-128.png" width="50%" />
+                            <span class="navButtons" id="mapLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a class="white-square" data-role="button" data-theme="d" data-direction="reverse"
+                            href="#page">
+                            <img src="img/icons/undo-128.png" width="50%" />
+                            <span class="navButtons" id="backLbl2"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="inspectionInbox">
+<div id="hbn5" style=" visability:hidden;"></div>
+        <div role="main" class="ui-content">
+            <div id="logo">
+            </div>
+            <div id="inspectInboxLbl" class="title">
+            </div>
+            <div id="navigation">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a id="newAssignListBtn" class="white-square" data-role="button" data-theme="d">
+                            <img src="img/icons/new-128.png" width="50%" />
+                            <span class="navButtons" id="newAssignLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a id="visitedAssignListBtn" class="white-square" data-role="button" data-theme="d">
+                            <img src="img/icons/checkmark-128.png" width="50%" />
+                            <span class="navButtons" id="vistedAssignLbl"></span></a>
+                    </div>
+                    <div class="ui-block-a">
+                        <a id="inspectFeedbackListBtn" class="white-square" data-role="button" data-theme="d">
+                            <img src="img/icons/download-128.png" width="50%" />
+                            <span class="navButtons" id="inboxAssignLbl"></span></a>
+                    </div>
+                    <div class="ui-block-b">
+                        <!--a class="white-square" data-role="button" data-theme="d" data-direction="reverse" href="#inspectionPage"-->
+                        <a class="white-square" data-role="button" data-theme="d" data-direction="reverse"
+                            href="#inspectionPage">
+                            <img src="img/icons/undo-128.png" width="50%" />
+                            <span class="navButtons" id="backLbl3"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-role="page" id="searchPage">
+<div id="hbn6" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a href="#inspectionPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="searchPageLbl">
+            </h1>
+        </div>
+        <div data-role="main" class="ui-content">
+            <input type="search" id="searchCompTxt" data-clear-btn="true" class="ui-icon ui-icon-carat-l" />
+            <label id="srchErrorLbl">
+            </label>
+            <button id="searchCompBtn" class="ui-btn ui-corner-all ui-shadow">
+            </button>
+        </div>
+    </div>
+    <div data-role="page" id="helpPage">
+<div id="hbn7" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a href="#settingPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="helpPageLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <div id="englishHelp" class="ui-body ui-body-a ui-corner-all">
+                <h3>
+                    Help & Support</h3>
+                <p>
+                    <b>Jeddah Mobile 940 App</b> is developed & maintained by the <a href="#popupUndismissible"
+                        data-rel="popup" style="font-size: medium; text-decoration: none; color: inherit;
+                        font-weight: normal" class="ui-text">Applications Development Team </a>of GIS
+                    Center in Jeddah Municipality.</p>
+                <center>
+                    <a href="http://www.jeddah.gov.sa/Amanah/Departments/GIS/index.php" onclick="javascript:return openExternal(this)">
+                        <img src="img/JM-GIS_logo.png" alt="Logo" width="75%" /></a></center>
+                <p>
+                    Please email us at <a href="mailto:gishelp@jeddah.gov.sa" onclick="javascript:return openExternal(this)">
+                        gishelp@jeddah.gov.sa</a> for help and support.</p>
+                <p>
+                    You can also visit our GIS Center's website at <a href="http://www.jeddah.gov.sa/Amanah/Departments/GIS/index.php"
+                        onclick="javascript:return openExternal(this)">www.jeddah.gov.sa</a></p>
+                <p>
+                    For Jeddah Municipality privacy policy, please click <a href="http://www.jeddah.gov.sa/policy/index.php"
+                        onclick="javascript:return openExternal(this)">here</a>.</p>
+                <p>
+                    App icons by <a href="http://icons8.com/" onclick="javascript:return openExternal(this)">
+                        icons8</a>. Background image by <a href="http://www.flickr.com/photos/ricky_viray/9424618050/"
+                            onclick="javascript:return openExternal(this)">Ricky Viray</a>.</p>
+            </div>
+            <div id="arabicHelp" class="ui-body ui-body-a ui-corner-all" dir="rtl">
+                <h3>
+                    مساعدة والدعم</h3>
+                <p>
+                    <b>تطبيق البلاغات الجغرافية 940</b> تم تطويره بواسطة<a href="#popupUndismissible"
+                        data-rel="popup" style="font-size: medium; text-decoration: none; color: inherit;
+                        font-weight: normal" class="ui-text"> فريق تطوير</a> إدارة نظم المعلومات الجغرافية
+                    في أمانة محافظة جدة</p>
+                <center>
+                    <a href="http://www.jeddah.gov.sa/Amanah/Departments/GIS/index.php" onclick="javascript:return openExternal(this)">
+                        <img src="img/JM-GIS_logo.png" alt="Logo" width="75%" /></a></center>
+                <p>
+                    تستطيع التواصل معنا من خلال البريد الالكتروني الخاص بإدارة نظم المعلومات الجغرافية
+                    <a href="mailto:gishelp@jeddah.gov.sa">gishelp@jeddah.gov.sa</a> للمساعدة والدعم</p>
+                <p>
+                    كما يمكنك زيارة موقع إدارة نظم المعلومات الجغرافية على العنوان<a href="http://www.jeddah.gov.sa/Amanah/Departments/GIS/index.php"
+                        onclick="javascript:return openExternal(this)">www.jeddah.gov.sa</a></p>
+            </div>
+            <div data-role="popup" id="popupUndismissible" class="ui-content" style="max-width: 280px"
+                data-dismissible="false">
+                <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-left">
+                    Close</a>
+                <h4>
+                    Application Development Team</h4>
+                <ul>
+                    <li><a href="" onclick="javascript:return openExternal(this)">Tawfeeq Ali</a></li>
+                    <li><a href="" onclick="javascript:return openExternal(this)">Wael Soltan</a></li>
+                    <li><a href="" onclick="javascript:return openExternal(this)">Ahmed AbdulMoneim</a></li>
+                    <li><a href="" onclick="javascript:return openExternal(this)">AbdulHameed</a></li>
+                    <li><a href="" onclick="javascript:return openExternal(this)">Abdul Aziz</a></li>
+                </ul>
+            </div>
+			<!--  hiding the two textboxes (1- Device_Id, 2- GCM_Id) as per instruction by Engr. Yasser Muhammadi  -->
+			<div style = "display: none"> 
+				<input type="text" id="deviceIdTxt" data-theme="b" style="text-align: center" disabled="disabled" />
+				<input type="text" id="gcmIdTxt" data-theme="b" style="text-align: center" />
+			</div>
+            <input type="button" id="cacheFlushBtn" value="Flush Cache" />
+        </div>
+    </div>
+    <div data-role="page" id="inspectListPage">
+<div id="hbn8" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="inspectListBckBtn" href="#inspectionInbox" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="inspectListPageLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="InspectListview" data-role="listview" data-theme="b">
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="userPage">
+<div id="hbn9" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a href="#settingPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="userProfile">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <!--<div id="userProfile" class="title"></div>-->
+            <form id="userForm">
+            <label id="nameLbl" for="Name">
+            </label>
+            <input type="text" name="Name" id="nameTI" data-theme="b" style="text-align: center"
+                required />
+            <label id="nidLbl" for="NID">
+            </label>
+            <input type="tel" name="NID" id="nidTI" data-theme="b" minlength="10" maxlength="10"
+                digits="true" style="text-align: center" required />
+            <label id="mobLbl" for="Mobile">
+            </label>
+            <input type="tel" name="Mobile" id="mobTI" data-theme="b" minlength="10" maxlength="10"
+                digits="true" style="text-align: center" required />
+            <label id="emailLbl" for="Email">
+            </label>
+            <input type="email" name="Email" id="emailTI" data-theme="b" style="text-align: center"
+                required />
+            <input id="userSaveBtn" type="submit" data-role="button" data-theme="b" />
+            </form>
+        </div>
+    </div>
+    <!-- Feedback Page -- Start -- Added by AAziz -->
+    <div data-role="page" id="feedbackPage">
+<div id="hbn10" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="feedbackformBckBtn" href="#settingPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="lblContactUsHeader">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <!--<div id="userProfile" class="title"></div>-->
+            <form id="feedbackForm">
+            <div style="display: none">
+                <label id="lblCitizenName" for="txtCitizenName">
+                </label>
+                <input type="text" name="txtCitizenName" id="txtCitizenName" data-theme="b" style="text-align: center" />
+                <label id="lblNationalId" for="txtNationalId">
+                </label>
+                <input type="tel" name="txtNationalId" id="txtNationalId" data-theme="b" minlength="10"
+                    maxlength="10" digits="true" style="text-align: center" />
+                <label id="lblMobileNumber" for="txtMobileNumber">
+                </label>
+                <input type="tel" name="txtMobileNumber" id="txtMobileNumber" data-theme="b" minlength="10"
+                    maxlength="10" digits="true" style="text-align: center" />
+                <label id="lblEmail" for="txtEmail">
+                </label>
+                <input type="email" name="txtEmail" id="txtEmail" data-theme="b" style="text-align: center" />
+            </div>
+            </form>
+            <form id="feedbackBasicForm">
+            <label id="lblMessageTitle" for="txtMessageTitle">
+            </label>
+            <input type="text" name="txtMessageTitle" id="txtMessageTitle" data-theme="b" style="text-align: center"
+                required />
+            <label id="lblMessageType">
+            </label>
+            <select data-theme="b" style="text-align: center" id="ddlMessageType" required>
+                <!-- <option id="lblSelectMessageType"  	data-theme="b" />   -->
+                <!-- <option id="lblSelectMessageType" selected="selected"></option> -->
+                <option id="lblSelectMessageType" value="None" selected="selected" />
+                <option id="lblComplaintsOpt" data-theme="b" />
+                <option id="lblInquiryOpt" data-theme="b" />
+                <option id="lblSuggestionOpt" data-theme="b" />
+                <option id="lblRequestOpt" data-theme="b" />
+                <option id="lblInvitationOpt" data-theme="b" />
+                <option id="lblComplimentOpt" data-theme="b" />
+            </select>
+            <label id="lblMessageContent" for="txtMessageContent">
+            </label>
+            <textarea rows="5" name="txtMessageContent" id="txtMessageContent" data-theme="b"
+                style="text-align: center; height: 10%" required></textarea>
+            <input id="btnSendFeedback" type="submit" data-role="button" data-theme="b" />
+			</form>
+        </div>
+    </div>
+    <!-- Feedback Page -- End -->
+    <div data-role="page" id="slctCatPage">
+<div id="hbn" style=" visability:hidden;"></div>
+        <div  data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="slctCatBckBtn" href="#page" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="slctCatLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="slctCatList" data-role="listview" data-theme="b">
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="slctSubCatPage">
+<div id="hbn1" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="slctSubCatBckBtn" href="#slctCatPage" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="slctSubCatLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="slctSubCatList" data-role="listview" data-theme="b">
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="slctInspectorPage">
+<div id="hbn11" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="slctInspectorBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="slctInspectorLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="slctInspectorList" data-role="listview" data-theme="b">
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="slctPriorityPage">
+<div id="hbn12" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="slctPriorityBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="slctPriorityLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="slctPriorityList" data-role="listview" data-theme="b">
+                <li><a id="1">Special</a> </li>
+                <li><a id="2">Supervisor</a> </li>
+                <li><a id="3">Twitter</a> </li>
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="assignCompPage">
+<div id="hbn13" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="assignCompBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="assignCompLbl">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <form>
+            <label id="assignComplaintIDLbl" for="assignComplaintIDTxt">
+            </label>
+            <input type="text" id="assignComplaintIDTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+            <label id="assignInspectorIDLbl" for="assignInspectorIDTxt">
+            </label>
+            <input type="text" id="assignInspectorIDTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+            <label id="assignComplaintClassLbl" for="assignComplaintClassTxt">
+            </label>
+            <input type="text" id="assignComplaintClassTxt" data-theme="b" disabled="disabled"
+                style="text-align: center" />
+            <input type="button" id="confSupAssignBtn" data-role="button" data-theme="b" value="Confirm" />
+            </form>
+        </div>
+    </div>
+    <div data-role="page" id="histPage">
+<div id="hbn14" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="histBckBtn" href="#page" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="HistTitle">
+            </h1>
+        </div>
+        <div role="main" class="ui-content">
+            <ul id="compHistList" data-role="listview" data-theme="b">
+            </ul>
+        </div>
+    </div>
+    <div data-role="page" id="mapPage">
+<div id="hbn15" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="mapBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="mapPageTitle">
+            </h1>
+        </div>
+        <div data-role="main" id="mapcontent" class="ui-content">
+            <div id="map">
+            </div>
+            <a id="GeoLocationBtn" data-role="button" data-inline="true" data-icon="navigation"
+                data-shadow="true" data-theme="b" data-mini="false" data-iconpos="notext"></a>
+            <!--<a id="MapToggleBtn" href="#" data-role="button" data-inline="true" data-icon="grid"
+				data-shadow="true" data-theme="b" data-iconpos="notext"></a>-->
+        </div>
+        <div id="slctMapLocation" data-role="popup" data-arrow="t,b">
+            <ul data-role="listview" data-inset="true">
+                <li id="mapLocLbl" data-role="list-divider"></li>
+                <li id="slctMapLocationList"></li>
+            </ul>
+        </div>
+    </div>
+    <!-- ******************************* -->
+    <!-- complaint Information/details Page Starts -->
+    <div data-role="page" id="complaintInfoPage">
+<div id="hbn16" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="compInfoBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="compInfoLbl">
+            </h1>
+        </div>
+        <div data-role="main" class="ui-content">
+            <form style="text-align: center">
+            <h2 id="compIdLbl">
+            </h2>
+            <div id="compMapImgDiv" style="position: relative;">
+                <img id="compMapMarker" alt="Complaint Location" src="img\bluedot.png" style="position: absolute;
+                    z-index: 100" />
+                <img id="compMapImg" style="width: 100%; border: 2px white solid; position: relative;"
+                    class="ui-corner-all" />
+            </div>
+            <div id="compPersonDetail">
+                <label id="compComplainerNameLbl" for="compComplainerNameTxt">
+                </label>
+                <input type="text" id="compComplainerNameTxt" data-theme="b" disabled="disabled"
+                    style="text-align: center" />
+                <label id="compComplainerContactLbl" for="compComplainerContactTxt">
+                </label>
+                <input type="text" name="Name" id="compComplainerContactTxt" data-theme="b" disabled="disabled"
+                    style="text-align: center" />
+            </div>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <label id="compCreateDateLbl" for="compCreateDateTxt">
+                    </label>
+                    <input type="text" name="" id="compCreateDateTxt" data-theme="b" disabled="disabled"
+                        style="text-align: center; margin-right: 5px;" />
+                </div>
+                <div class="ui-block-b">
+                    <label id="compStatusLbl" for="compStatusTxt">
+                    </label>
+                    <input type="text" name="" id="compStatusTxt" data-theme="b" disabled="disabled"
+                        style="text-align: center; width: 90%" />
+                </div>
+                <div class="ui-block-a">
+                    <label id="compDeadlineLbl" for="compDeadlineTxt">
+                    </label>
+                    <input type="text" name="" id="compDeadlineTxt" data-theme="b" disabled="disabled"
+                        style="text-align: center; width: 90%" />
+                </div>
+                <div class="ui-block-b">
+                    <label id="compCloseDateLbl" for="compCloseDateTxt">
+                    </label>
+                    <input type="text" name="" id="compCloseDateTxt" data-theme="b" disabled="disabled"
+                        style="text-align: center; width: 90%" />
+                </div>
+            </div>
+            <!--Commented 'Closing Code كود الإغلاق' as per the requirement from the
+				Complaints department (مدير الإدارة العامة لخدمات العملاء), 
+				Mr. Mohammed Hassan Mohamed Al-Zhrani (malzhrani@jeddah.gov.sa) on 09-11-2014 (16-01-1436)-->
+            <!--
+            <label id="compCloseCodeLbl" for="compCloseCodeTxt"></label>
+            <input type="text" id="compCloseCodeTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+			-->
+            <label id="compNameLbl" for="compNameTxt">
+            </label>
+            <input type="text" name="Name" id="compNameTxt" data-theme="b" disabled="disabled"
+                style="text-align: center" />
+            <label id="compDescLbl" for="compDescTxt">
+            </label>
+            <input type="text" name="Description" id="compDescTxt" data-theme="b" disabled="disabled"
+                style="text-align: center" />
+            <label id="compLocDescLbl" for="complLocDescTxt">
+            </label>
+            <input type="text" name="Location" id="compLocDescTxt" data-theme="b" disabled="disabled"
+                style="text-align: center" />
+            <label id="compRespGroupLbl" for="compRespGroupTxt">
+            </label>
+            <input type="text" name="respGroup" id="compRespGroupTxt" data-theme="b" disabled="disabled"
+                style="text-align: center" />
+            <!-- User Rating Controls starts -->
+			 <label id="lblUserRating" for="lnkUserRatings"></label>
+            <div id="historyUserRatingSection" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b">
+                <img id="one_star_Rating" alt="one_star_Rating" src="img/user_rating_images/starRatingHistory/one_star.png"></img>
+                <img id="two_star_Rating" alt="two_star_Rating" src="img/user_rating_images/starRatingHistory/two_star.png"></img>
+                <img id="three_star_Rating" alt="three_star_Rating" src="img/user_rating_images/starRatingHistory/three_star.png"></img>
+                <img id="four_star_Rating" alt="four_star_Rating" src="img/user_rating_images/starRatingHistory/four_star.png"></img>
+                <img id="five_star_Rating" alt="five_star_Rating" src="img/user_rating_images/starRatingHistory/five_star.png"></img>
+            </div>
+            <div id="initialUserRatingSection">
+                <a href="#userRatingPopupDialog" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-delete ui-btn-b"
+                    data-rel="popup" data-position-to="window" data-transition="flow"><span id="lnkUserRating"></span>
+                    <img id="icnUserRating" alt="UserRating" src="img/star.png"></img></a>
+                <div data-role="popup" id="userRatingPopupDialog" data-overlay-theme="b" data-theme="b"
+                    data-dismissible="false" style="max-width: 400px;">
+					<div data-role="header" data-theme="a">
+					<h1 id="lbldialogPopUserRatingHeader">تقييم البلاغ</h1>
+                    </div>
+                    <div role="main" class="ui-content">
+                        <!-- put anything between this DIV -->
+                        <div class="ratingContentPosition">
+                            <!-- <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>-->
+                            <div id="precision">
+                            </div>
+                            <input id="precision-hint" type="text" class="input hint" />
+                            <!--
+				<h3 class="ui-title">Are you sure you want to View this page?</h3>
+				<p>This action cannot be undone.</p>
+				-->
+                        </div>
+                        <!-- put buttons between this DIV -->
+                        <div id="userRatingButtons">
+                            <a href="#" id="btnSubmitUserRating" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back">Send Feedback</a> 
+							<a href="#" id="btnCancelUserRating" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back">Cancel</a>
+                            <!-- <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back" data-transition="flow">Ok</a> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- User Rating Controls ends -->
+            <img id="compImg" style="width: 100%; border: 2px white solid;" class="ui-corner-all" />
+            <div id="supAssignBtnDiv">
+                <input type="button" id="supAssignBtn" data-role="button" data-theme="b" />
+            </div>
+            <div id="inspectVisitInputDiv">
+                <hr />
+                <h2 id="inspectorActionLbl">
+                </h2>
+                <hr />
+                <label id="changeDeptList1" for="allDepartmentList" class="select">
+                </label>
+                <select id="allDepartmentList" data-theme="b">
+                </select>
+                <label id="inspectorCommentLbl" for="inspectorCommentTxt">
+                </label>
+                <textarea id="inspectorCommentTxt" cols="2" data-theme="a" style="text-align: center"></textarea>
+                <label id="slctUploadImageLbl">
+                </label>
+                <div id="addInspectPhotosDiv">
+                </div>
+                <input type="button" id="addInspectPhotosBtn" data-role="button" data-theme="a" value="" />
+                <input type="hidden" id="assignIDTxt" />
+                <input type="button" id="inspectorSubmitBtn" data-role="button" data-theme="a" value="" />
+            </div>
+            <div id="visitInfoDiv" class="ui-corner-all custom-corners" data-theme="a">
+                <hr />
+                <h2 id="supervisorActionLbl">
+                </h2>
+                <hr />
+                <label id="inspectorNameLbl" for="inspectorNameTxt">
+                </label>
+                <input id="inspectorNameTxt" type="text" disabled="disabled" data-theme="a" style="text-align: center" />
+                <label id="visitTimeLbl" for="visitTimeTxt">
+                </label>
+                <input id="visitTimeTxt" type="text" disabled="disabled" data-theme="a" style="text-align: center" />
+                <label id="visitCommentLbl" for="visitCommentTxt">
+                </label>
+                <input id="visitCommentTxt" type="text" disabled="disabled" data-theme="a" style="text-align: center" />
+                <label id="visitDepartmentListLbl" for="visitDepartmentList" class="select">
+                </label>
+                <select id="visitDepartmentList" data-theme="b">
+                </select>
+                <div id="visitImagesDiv">
+                    <img id="visitImage1" style="width: 100%; border: 2px white solid;" class="ui-corner-all"
+                        src="" />
+                    <img id="visitImage2" style="width: 100%; border: 2px white solid;" class="ui-corner-all"
+                        src="" />
+                    <img id="visitImage3" style="width: 100%; border: 2px white solid;" class="ui-corner-all"
+                        src="" />
+                    <img id="visitImage4" style="width: 100%; border: 2px white solid;" class="ui-corner-all"
+                        src="" />
+                </div>
+                <input type="button" id="superSubmitBtn" data-role="button" data-theme="a" value="" />
+            </div>
+            </form>
+        </div>
+    </div>
+    <!-- complaint Information Page Ends -->
+    <!-- ******************************* -->
+    <div data-role="page" id="genComplaintPage">
+<div id="hbn17" style=" visability:hidden;"></div>
+        <div data-role="header" data-theme="b" data-add-back-btn="true">
+            <a id="genComplaintBckBtn" data-rel="back" data-direction="reverse" class="ui-btn ui-btn-left ui-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">
+            </a>
+            <h1 id="genComplaintLbl">
+            </h1>
+        </div>
+        <div data-role="main" class="ui-content">
+            <form id="genCompForm" style="text-align: center">
+            <label id="slctCompParNameLbl" for="slctCompParNameTxt">
+            </label>
+            <input type="text" id="slctCompParNameTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+            <input type="hidden" id="slctCompParNameId" />
+            <label id="slctCompNameLbl" for="slctCompNameTxt">
+            </label>
+            <input type="text" id="slctCompNameTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+            <input type="hidden" id="slctCompNameId" />
+            <label id="slctCompLocDescLbl" for="slctComplLocDescTxt">
+            </label>
+            <input type="text" id="slctCompLocDescTxt" data-theme="b" disabled="disabled" style="text-align: center" />
+            <input type="hidden" id="slctSUBMUNId" />
+            <input type="hidden" id="slctDISTId" />
+            <input type="hidden" id="slctsubDISTId" />
+            <input type="hidden" id="slctSTRTId" />
+            <input type="hidden" id="slctSTRTName" />
+            <input type="hidden" id="GPSLon" />
+            <input type="hidden" id="GPSLat" />
+            <label id="slctCompDescLbl" for="slctCompDescTxt">
+            </label>
+            <textarea id="slctCompDescTxt" data-theme="b" style="text-align: center" cols="2"></textarea>
+            <label id="slctUploadImageLbl">
+            </label>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <a id="cameraBtn" data-role="button" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-camera ui-btn-b">
+                    </a>
+                </div>
+                <div class="ui-block-b">
+                    <a id="picLibBtn" data-role="button" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-grid ui-btn-b">
+                    </a>
+                </div>
+            </div>
+            <div id="uploadStatusTxt" class="label">
+            </div>
+            <div id="progress-bar-div" class="progress-bar">
+                <input type="range" id="progress-bar" value="0" min="0" max="100" data-highlight="true"
+                    data-mini="true" data-theme="b" />
+            </div>
+            <img style="width: 100%; border: 2px white solid;" class="ui-corner-all" id="uploadImage"
+                src="" />
+            <textarea cols="2" id="pictureTxt" disabled="disabled" style="display: none"></textarea>
+            <input type="button" id="submitComplaint" data-role="button" data-theme="b" />
+            </form>
+        </div>
+    </div>
+    <!--<script src="http://192.168.1.107:81/target/target-script-min.js#anonymous"></script>-->
+</body>
+</html>
